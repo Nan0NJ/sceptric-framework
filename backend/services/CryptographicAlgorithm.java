@@ -12,7 +12,7 @@ public interface CryptographicAlgorithm {
      *      @return The encrypted output as a String.
      *      Key algorithm on which performance is measured.
      */
-    String encrypt(String plainText);
+    String encrypt(String plainText) throws Exception;
 
     /**
      *      Decrypts the given cipher text using the implemented algorithm.
@@ -20,7 +20,7 @@ public interface CryptographicAlgorithm {
      *      @return The decrypted output as a String.
      *      Used in terms of testing to check correctness of algorithm.
      */
-    String decrypt(String cipherText);
+    String decrypt(String cipherText) throws Exception;
 
     /**
      *      Returns the name of the cryptographic algorithm being used.

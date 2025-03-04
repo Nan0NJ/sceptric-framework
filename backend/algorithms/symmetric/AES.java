@@ -6,7 +6,7 @@
  *          - Should I make SecretKey reusable, yet it is not intended to check that part?
  *          If so then later... (for me)
  *          -  Add a constructor to accept a SecretKey for key reuse.
- *          - Consider exposing the IV for external storage/reuse in CBC/GCM modes.
+ *          -  Instead of Reusing IV, to make it fresh with every encryption.
  */
 
 package backend.algorithms.symmetric;

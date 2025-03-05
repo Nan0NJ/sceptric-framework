@@ -34,6 +34,8 @@ public class Sceptric {
         testDH();
         System.out.println("----------------------------------------------------");
         testELGAMAL();
+        System.out.println("----------------------------------------------------");
+        testPaillier();
     }
 
     /**
@@ -428,7 +430,8 @@ public class Sceptric {
      * Tests ElGamal encryption and decryption to verify correctness and probabilistic behavior.
      */
     public static void testELGAMAL() {
-        int[] keySizes = {1024, 2048, 4096}; // Supported key sizes
+        int[] keySizes = {1024, 2048}; // Supported key sizes
+        // 4096 is too large so bottleneck causes it to take a lot of time --- meaning that big key size doesn't mean better overall.
         String testString = "Let's check if it will encrypt correctly"; // Consistent with testAES
 
         for (int keySize : keySizes) {
@@ -458,6 +461,32 @@ public class Sceptric {
                 System.out.println("Success 2: " + testString.equals(decrypted2));
             } catch (Exception e) {
                 System.err.println("ElGamal test failed for key size " + keySize + ": " + e.getMessage());
+            }
+        }
+    }
+    /**
+     * Tests Paillier encryption and decryption to verify correctness.
+     */
+    public static void testPaillier() {
+        int[] keySizes = {1024, 2048};
+        // 4096 is too large so bottleneck causes it to take a lot of time --- meaning that big key size doesn't mean better overall.
+        String testString = "Let's check if it will encrypt correctly";
+
+        for (int keySize : keySizes) {
+            try {
+                CryptographicAlgorithm cipher = new PAILIER(keySize);
+                System.out.println("\nTesting " + cipher.getAlgorithmName());
+                System.out.println("Original: " + testString);
+
+                String encrypted = cipher.encrypt(testString);
+                System.out.println("Encrypted: " + encrypted);
+
+                String decrypted = cipher.decrypt(encrypted);
+                System.out.println("Decrypted: " + decrypted);
+
+                System.out.println("Success: " + testString.equals(decrypted));
+            } catch (Exception e) {
+                System.err.println("Paillier test failed for key size " + keySize + ": " + e.getMessage());
             }
         }
     }

@@ -4,6 +4,8 @@ import backend.algorithms.symmetric.*;
 import backend.algorithms.asymmetric.*;
 import backend.services.CryptographicAlgorithm;
 
+import java.security.PublicKey;
+
 public class Sceptric {
 
     public static void main(String[] args) throws Exception {
@@ -28,6 +30,8 @@ public class Sceptric {
         testRSA();
         System.out.println("----------------------------------------------------");
         testDSA();
+        System.out.println("----------------------------------------------------");
+        testDH();
     }
 
     /**
@@ -379,6 +383,42 @@ public class Sceptric {
                 System.out.println("Verification: " + (isValid ? "Success" : "Failure"));
             } catch (Exception e) {
                 System.err.println("DSA test failed for " + keySize + " bits: " + e.getMessage());
+            }
+        }
+    }
+    /**
+     * Tests Diffie-Hellman key exchange to verify shared secret agreement.
+     */
+    public static void testDH() throws Exception {
+        int[] keySizes = {1024, 2048}; // Supported DH key sizes
+        // 4096 is too large so bottleneck causes it to take a lot of time --- meaning that big key size doesn't mean better overall.
+        for (int keySize : keySizes) {
+            try {
+                System.out.println("\nTesting Diffie-Hellman key exchange with " + keySize + " bits:");
+
+                // Generate key pairs for Alice and Bob
+                DH alice = new DH(keySize);
+                DH bob = new DH(keySize);
+
+                // Exchange public keys
+                String alicePublicKeyEncoded = alice.getEncodedPublicKey();
+                String bobPublicKeyEncoded = bob.getEncodedPublicKey();
+
+                PublicKey alicePublicKey = DH.decodePublicKey(alicePublicKeyEncoded);
+                PublicKey bobPublicKey = DH.decodePublicKey(bobPublicKeyEncoded);
+
+                // Compute shared secrets
+                String aliceSharedSecret = alice.generateSharedSecret(bobPublicKey);
+                String bobSharedSecret = bob.generateSharedSecret(alicePublicKey);
+
+                System.out.println("Alice's Shared Secret: " + aliceSharedSecret);
+                System.out.println("Bob's Shared Secret: " + bobSharedSecret);
+
+                // Verify both parties derive the same shared secret
+                boolean isSuccess = aliceSharedSecret.equals(bobSharedSecret);
+                System.out.println("Shared Secret Match: " + (isSuccess ? "Success" : "Failure"));
+            } catch (Exception e) {
+                System.err.println("Diffie-Hellman test failed for " + keySize + " bits: " + e.getMessage());
             }
         }
     }

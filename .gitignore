@@ -30,8 +30,7 @@ replay_pid*
 # Gradle files
 .gradle/
 
-# Maven
+# Maven (Keep pom.xml!)
 .mvn/
 pom.xml.tag
 pom.xml.releaseBackup
-pom.xml.versionsBackup

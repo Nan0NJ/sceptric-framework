@@ -100,7 +100,7 @@ public class DES implements CryptographicAlgorithm {
     }
 
     /**
-     *      Decrypts the given Base64-encoded ciphertext using AES.
+     *      Decrypts the given Base64-encoded ciphertext using DES.
      *      @param cipherText The encrypted text to be decrypted
      *      @return The decrypted output as a String
      *      @throws Exception If decryption fails
@@ -131,7 +131,7 @@ public class DES implements CryptographicAlgorithm {
     }
 
     /**
-     *      Returns the name of the AES algorithm being used.
+     *      Returns the name of the DES algorithm being used.
      *      @return Algorithm name in the format "DES-mode-padding"
      */
     @Override

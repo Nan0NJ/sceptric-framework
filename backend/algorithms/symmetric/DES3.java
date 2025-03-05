@@ -62,7 +62,7 @@ public class DES3 implements CryptographicAlgorithm {
     }
 
     /**
-     *      Encrypts the given plaintext using DES.
+     *      Encrypts the given plaintext using 3DES.
      *      @param plainText The input text to be encrypted
      *      @return The encrypted output as a Base64-encoded string
      *      @throws Exception If encryption fails
@@ -103,7 +103,7 @@ public class DES3 implements CryptographicAlgorithm {
     }
 
     /**
-     *      Decrypts the given Base64-encoded ciphertext using AES.
+     *      Decrypts the given Base64-encoded ciphertext using 3DES.
      *      @param cipherText The encrypted text to be decrypted
      *      @return The decrypted output as a String
      *      @throws Exception If decryption fails
@@ -134,8 +134,8 @@ public class DES3 implements CryptographicAlgorithm {
     }
 
     /**
-     *      Returns the name of the AES algorithm being used.
-     *      @return Algorithm name in the format "DES-mode-padding"
+     *      Returns the name of the 3DES algorithm being used.
+     *      @return Algorithm name in the format "3DES-mode-padding"
      */
     @Override
     public String getAlgorithmName() {

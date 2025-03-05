@@ -1,10 +1,7 @@
 package backend;
 
-import backend.algorithms.symmetric.BLOWFISH;
+import backend.algorithms.symmetric.*;
 import backend.services.CryptographicAlgorithm;
-import backend.algorithms.symmetric.AES;
-import backend.algorithms.symmetric.DES;
-import backend.algorithms.symmetric.DES3;
 
 public class Sceptric {
 
@@ -16,6 +13,8 @@ public class Sceptric {
         testDES3();
         System.out.println("----------------------------------------------------");
         testBLOWFISH();
+        System.out.println("----------------------------------------------------");
+        testIDEA();
     }
 
     /**
@@ -179,6 +178,50 @@ public class Sceptric {
                     } catch (Exception e) {
                         System.err.println("Blowfish test failed for " + mode + "/" + padding + "/" + keySize + ": " + e.getMessage());
                     }
+                }
+            }
+        }
+    }
+    /**
+     *      Tests IDEA encryption and decryption to verify correctness.
+     */
+    public static void testIDEA() throws Exception {
+
+        // Test ECB determinism with a single IDEA instance
+        CryptographicAlgorithm desCipher = new IDEA("ECB", "PKCS5Padding");
+        String encrypted1 = desCipher.encrypt("Hello, World!");
+        String encrypted2 = desCipher.encrypt("Hello, World!");
+
+        System.out.println("\nTesting IDEA ECB determinism with same instance:");
+        System.out.println("Encrypted 1: " + encrypted1);
+        System.out.println("Encrypted 2: " + encrypted2);
+        System.out.println("Are ciphertexts equal? " + encrypted1.equals(encrypted2));
+
+        String[] modes = {"ECB", "CBC", "CFB", "CTR"};
+        String[] paddings = {"NoPadding", "PKCS5Padding"};
+        String testString = "Let's check if IDEA encrypts correctly!!";
+
+        for (String mode : modes) {
+            for (String padding : paddings) {
+                try {
+                    // CTR mode must use NoPadding
+                    if (mode.equals("CTR") && padding.equals("PKCS5Padding")) {
+                        continue; // Skip invalid combination
+                    }
+
+                    CryptographicAlgorithm cipher = new IDEA(mode, padding);
+                    System.out.println("\nTesting " + cipher.getAlgorithmName() + ":");
+                    System.out.println("Original: " + testString);
+
+                    String encrypted = cipher.encrypt(testString);
+                    System.out.println("Encrypted: " + encrypted);
+
+                    String decrypted = cipher.decrypt(encrypted);
+                    System.out.println("Decrypted: " + decrypted);
+
+                    System.out.println("Success: " + testString.equals(decrypted));
+                } catch (Exception e) {
+                    System.err.println("IDEA test failed for " + mode + "/" + padding + ": " + e.getMessage());
                 }
             }
         }

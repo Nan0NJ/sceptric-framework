@@ -3,6 +3,7 @@ package backend;
 import backend.services.CryptographicAlgorithm;
 import backend.algorithms.symmetric.AES;
 import backend.algorithms.symmetric.DES;
+import backend.algorithms.symmetric.DES3;
 
 public class Sceptric {
 
@@ -10,6 +11,8 @@ public class Sceptric {
         testAES();
         System.out.println("----------------------------------------------------");
         testDES();
+        System.out.println("----------------------------------------------------");
+        testDES3();
     }
 
     /**
@@ -94,6 +97,45 @@ public class Sceptric {
                     System.out.println("Success: " + testString.equals(decrypted));
                 } catch (Exception e) {
                     System.err.println("DES test failed for " + mode + "/" + padding + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+     *      Tests 3DES encryption and decryption to verify correctness.
+     */
+    public static void testDES3() throws Exception {
+
+        // Test ECB determinism
+        CryptographicAlgorithm cipherORG = new DES3("ECB", "PKCS5Padding");
+        String encrypted1 = cipherORG.encrypt("Hello, World!");
+        String encrypted2 = cipherORG.encrypt("Hello, World!");
+        System.out.println("\nTesting ECB determinism:");
+        System.out.println("Encrypted 1: " + encrypted1);
+        System.out.println("Encrypted 2: " + encrypted2);
+        System.out.println("Are ciphertexts equal? " + encrypted1.equals(encrypted2));
+
+        String[] modes = {"ECB", "CBC", "CFB", "CTR"};
+        String[] paddings = {"PKCS5Padding", "NoPadding"};
+        String testString = "Let's check if 3DES encrypts correctly!!";
+
+        for (String mode : modes) {
+            for (String padding : paddings) {
+                try {
+                    CryptographicAlgorithm cipher = new DES3(mode, padding);
+                    System.out.println("\nTesting " + cipher.getAlgorithmName() + ":");
+                    System.out.println("Original: " + testString);
+
+                    String encrypted = cipher.encrypt(testString);
+                    System.out.println("Encrypted: " + encrypted);
+
+                    String decrypted = cipher.decrypt(encrypted);
+                    System.out.println("Decrypted: " + decrypted);
+
+                    System.out.println("Success: " + testString.equals(decrypted));
+                } catch (Exception e) {
+                    System.err.println("DES3 test failed for " + mode + "/" + padding + ": " + e.getMessage());
                 }
             }
         }

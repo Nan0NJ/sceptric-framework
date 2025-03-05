@@ -32,6 +32,8 @@ public class Sceptric {
         testDSA();
         System.out.println("----------------------------------------------------");
         testDH();
+        System.out.println("----------------------------------------------------");
+        testELGAMAL();
     }
 
     /**
@@ -419,6 +421,43 @@ public class Sceptric {
                 System.out.println("Shared Secret Match: " + (isSuccess ? "Success" : "Failure"));
             } catch (Exception e) {
                 System.err.println("Diffie-Hellman test failed for " + keySize + " bits: " + e.getMessage());
+            }
+        }
+    }
+    /**
+     * Tests ElGamal encryption and decryption to verify correctness and probabilistic behavior.
+     */
+    public static void testELGAMAL() {
+        int[] keySizes = {1024, 2048, 4096}; // Supported key sizes
+        String testString = "Let's check if it will encrypt correctly"; // Consistent with testAES
+
+        for (int keySize : keySizes) {
+            try {
+                CryptographicAlgorithm elgamal = new ELGAMAL(keySize);
+                System.out.println("\nTesting " + elgamal.getAlgorithmName() + ":");
+                System.out.println("Original: " + testString);
+
+                // First encryption
+                String encrypted1 = elgamal.encrypt(testString);
+                System.out.println("Encrypted 1: " + encrypted1);
+
+                // Second encryption to test probabilistic property
+                String encrypted2 = elgamal.encrypt(testString);
+                System.out.println("Encrypted 2: " + encrypted2);
+
+                // Verify that ciphertexts are different
+                System.out.println("Are ciphertexts different? " + !encrypted1.equals(encrypted2));
+
+                // Decrypt both ciphertexts
+                String decrypted1 = elgamal.decrypt(encrypted1);
+                System.out.println("Decrypted 1: " + decrypted1);
+                System.out.println("Success 1: " + testString.equals(decrypted1));
+
+                String decrypted2 = elgamal.decrypt(encrypted2);
+                System.out.println("Decrypted 2: " + decrypted2);
+                System.out.println("Success 2: " + testString.equals(decrypted2));
+            } catch (Exception e) {
+                System.err.println("ElGamal test failed for key size " + keySize + ": " + e.getMessage());
             }
         }
     }

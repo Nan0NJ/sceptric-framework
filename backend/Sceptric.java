@@ -15,6 +15,8 @@ public class Sceptric {
         testBLOWFISH();
         System.out.println("----------------------------------------------------");
         testIDEA();
+        System.out.println("----------------------------------------------------");
+        testRC4();
     }
 
     /**
@@ -103,7 +105,6 @@ public class Sceptric {
             }
         }
     }
-
     /**
      *      Tests 3DES encryption and decryption to verify correctness.
      */
@@ -223,6 +224,31 @@ public class Sceptric {
                 } catch (Exception e) {
                     System.err.println("IDEA test failed for " + mode + "/" + padding + ": " + e.getMessage());
                 }
+            }
+        }
+    }
+    /**
+     *      Tests RC4 encryption and decryption to verify correctness.
+     */
+    public static void testRC4() throws Exception {
+        int[] keySizes = {40, 64, 128, 192, 256, 512, 1024, 2048}; // RC4 supports 40 to 2048-bit keys
+        String testString = "Let's check if RC4 encrypts correctly!!";
+
+        for (int keySize : keySizes) {
+            try {
+                CryptographicAlgorithm cipher = new RC4(keySize);
+                System.out.println("\nTesting RC4 with " + keySize + " bits:");
+                System.out.println("Original: " + testString);
+
+                String encrypted = cipher.encrypt(testString);
+                System.out.println("Encrypted: " + encrypted);
+
+                String decrypted = cipher.decrypt(encrypted);
+                System.out.println("Decrypted: " + decrypted);
+
+                System.out.println("Success: " + testString.equals(decrypted));
+            } catch (Exception e) {
+                System.err.println("RC4 test failed for key size " + keySize + ": " + e.getMessage());
             }
         }
     }

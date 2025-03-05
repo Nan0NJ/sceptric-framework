@@ -1,5 +1,6 @@
 package backend;
 
+import backend.algorithms.symmetric.BLOWFISH;
 import backend.services.CryptographicAlgorithm;
 import backend.algorithms.symmetric.AES;
 import backend.algorithms.symmetric.DES;
@@ -13,6 +14,8 @@ public class Sceptric {
         testDES();
         System.out.println("----------------------------------------------------");
         testDES3();
+        System.out.println("----------------------------------------------------");
+        testBLOWFISH();
     }
 
     /**
@@ -136,6 +139,46 @@ public class Sceptric {
                     System.out.println("Success: " + testString.equals(decrypted));
                 } catch (Exception e) {
                     System.err.println("DES3 test failed for " + mode + "/" + padding + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+    /**
+     * Tests Blowfish encryption and decryption to verify correctness.
+     */
+    public static void testBLOWFISH() throws Exception {
+        // Test ECB determinism
+        CryptographicAlgorithm cipherORG = new BLOWFISH("ECB", "PKCS5Padding", 128);
+        String encrypted1 = cipherORG.encrypt("Hello, World!");
+        String encrypted2 = cipherORG.encrypt("Hello, World!");
+        System.out.println("\nTesting ECB determinism:");
+        System.out.println("Encrypted 1: " + encrypted1);
+        System.out.println("Encrypted 2: " + encrypted2);
+        System.out.println("Are ciphertexts equal? " + encrypted1.equals(encrypted2));
+
+        String[] modes = {"ECB", "CBC", "CFB", "CTR"};
+        String[] paddings = {"PKCS5Padding", "NoPadding"};
+        int[] keySizes = {32, 64, 128, 192, 256, 448}; // Blowfish supports key sizes from 32 to 448 bits
+        String testString = "Let's check if Blowfish encrypts correct";
+
+        for (String mode : modes) {
+            for (String padding : paddings) {
+                for (int keySize : keySizes) {
+                    try {
+                        CryptographicAlgorithm cipher = new BLOWFISH(mode, padding, keySize);
+                        System.out.println("\nTesting " + cipher.getAlgorithmName() + " with " + keySize + " bits:");
+                        System.out.println("Original: " + testString);
+
+                        String encrypted = cipher.encrypt(testString);
+                        System.out.println("Encrypted: " + encrypted);
+
+                        String decrypted = cipher.decrypt(encrypted);
+                        System.out.println("Decrypted: " + decrypted);
+
+                        System.out.println("Success: " + testString.equals(decrypted));
+                    } catch (Exception e) {
+                        System.err.println("Blowfish test failed for " + mode + "/" + padding + "/" + keySize + ": " + e.getMessage());
+                    }
                 }
             }
         }

@@ -71,7 +71,6 @@ public class DES implements CryptographicAlgorithm {
 
         byte[] inputBytes = plainText.getBytes(StandardCharsets.UTF_8);
 
-        // For NoPadding with ECB or CBC, ensure input length is a multiple of 8 bytes
         if (padding.equals("NoPadding") && (mode.equals("ECB") || mode.equals("CBC"))) {
             int blockSize = 8;
             if (inputBytes.length % blockSize != 0) {

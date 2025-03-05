@@ -17,6 +17,8 @@ public class Sceptric {
         testIDEA();
         System.out.println("----------------------------------------------------");
         testRC4();
+        System.out.println("----------------------------------------------------");
+        testRC5();
     }
 
     /**
@@ -249,6 +251,40 @@ public class Sceptric {
                 System.out.println("Success: " + testString.equals(decrypted));
             } catch (Exception e) {
                 System.err.println("RC4 test failed for key size " + keySize + ": " + e.getMessage());
+            }
+        }
+    }
+    /**
+     * Tests RC5 encryption and decryption to verify correctness.
+     */
+    public static void testRC5() throws Exception {
+        String[] modes = {"ECB", "CBC", "CFB", "CTR"};
+        String[] paddings = {"PKCS5Padding", "NoPadding"};
+        int[] keySizes = {32, 64, 128, 192, 256, 512, 1024, 2048}; // RC5 supports 32 to 2048-bit keys
+        int[] rounds = {12, 16, 20}; // Common RC5 rounds
+        String testString = "Let's check if RC5 encrypts correctly!!!";
+
+        for (String mode : modes) {
+            for (String padding : paddings) {
+                for (int keySize : keySizes) {
+                    for (int round : rounds) {
+                        try {
+                            CryptographicAlgorithm cipher = new RC5(mode, padding, keySize, round);
+                            System.out.println("\nTesting " + cipher.getAlgorithmName() + " with " + keySize + " bits and " + round + " rounds:");
+                            System.out.println("Original: " + testString);
+
+                            String encrypted = cipher.encrypt(testString);
+                            System.out.println("Encrypted: " + encrypted);
+
+                            String decrypted = cipher.decrypt(encrypted);
+                            System.out.println("Decrypted: " + decrypted);
+
+                            System.out.println("Success: " + testString.equals(decrypted));
+                        } catch (Exception e) {
+                            System.err.println("RC5 test failed for " + mode + "/" + padding + "/" + keySize + "/" + round + " rounds: " + e.getMessage());
+                        }
+                    }
+                }
             }
         }
     }

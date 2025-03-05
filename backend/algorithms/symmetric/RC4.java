@@ -20,6 +20,11 @@ import java.util.Base64;
  *      Varying Key size 40-2048 bits.
  */
 public class RC4 implements CryptographicAlgorithm {
+
+    /**
+     *      Constructs of RC4 instance.
+     *      Varying key size (40-2048).
+     */
     private final Cipher cipher;
     private final SecretKey key;
 

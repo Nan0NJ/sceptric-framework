@@ -1,6 +1,7 @@
 package backend;
 
 import backend.algorithms.symmetric.*;
+import backend.algorithms.asymmetric.*;
 import backend.services.CryptographicAlgorithm;
 
 public class Sceptric {
@@ -21,6 +22,12 @@ public class Sceptric {
         testRC5();
         System.out.println("----------------------------------------------------");
         testRC6();
+        System.out.println("----------------------------------------------------\n" +
+                "NOT STARTING WITH THE ASYMMETRIC ALGORITHMS\n" +
+                "----------------------------------------------------");
+        testRSA();
+        System.out.println("----------------------------------------------------");
+        testDSA();
     }
 
     /**
@@ -321,6 +328,57 @@ public class Sceptric {
                         }
                     }
                 }
+            }
+        }
+    }
+    /**
+     * Tests RSA encryption and decryption to verify correctness.
+     */
+    public static void testRSA() throws Exception {
+        String[] paddings = {"OAEPWithSHA-256AndMGF1Padding", "PKCS1Padding", "NoPadding"};
+        int[] keySizes = {1024, 2048, 4096}; // RSA supports 1024, 2048, and 4096-bit keys
+        String testString = "Let's check if RSA encrypts correctly!!!";
+
+        for (String padding : paddings) {
+            for (int keySize : keySizes) {
+                try {
+                    CryptographicAlgorithm cipher = new RSA(padding, keySize);
+                    System.out.println("\nTesting " + cipher.getAlgorithmName() + " with " + keySize + " bits:");
+                    System.out.println("Original: " + testString);
+
+                    String encrypted = cipher.encrypt(testString);
+                    System.out.println("Encrypted: " + encrypted);
+
+                    String decrypted = cipher.decrypt(encrypted);
+                    System.out.println("Decrypted: " + decrypted);
+
+                    System.out.println("Success: " + testString.equals(decrypted));
+                } catch (Exception e) {
+                    System.err.println("RSA test failed for " + padding + "/" + keySize + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+    /**
+     * Tests DSA signing and verification.
+     */
+    public static void testDSA() throws Exception {
+        int[] keySizes = {1024, 2048, 3072}; // DSA supports 1024, 2048, and 3072-bit keys
+        String testString = "Let's check if DSA signing works correctly!!!";
+
+        for (int keySize : keySizes) {
+            try {
+                DSA dsa = new DSA(keySize);
+                System.out.println("\nTesting " + dsa.getAlgorithmName() + " with " + keySize + " bits:");
+                System.out.println("Original: " + testString);
+
+                String signature = dsa.sign(testString);
+                System.out.println("Signature: " + signature);
+
+                boolean isValid = dsa.verify(testString, signature);
+                System.out.println("Verification: " + (isValid ? "Success" : "Failure"));
+            } catch (Exception e) {
+                System.err.println("DSA test failed for " + keySize + " bits: " + e.getMessage());
             }
         }
     }

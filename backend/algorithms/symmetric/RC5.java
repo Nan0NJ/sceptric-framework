@@ -50,7 +50,7 @@ public class RC5 implements CryptographicAlgorithm {
         this.key = generateKey(keySize);
 
         if (!mode.equals("ECB")) {
-            this.iv = new byte[8]; // Fixed 8-byte IV
+            this.iv = new byte[8]; // Fixed 8-byte IVs
             new SecureRandom().nextBytes(this.iv);
         }
     }
@@ -62,7 +62,7 @@ public class RC5 implements CryptographicAlgorithm {
     }
 
     /**
-     *      Encrypts the given plaintext using IDEA.
+     *      Encrypts the given plaintext using RC5.
      *      @param plainText The input text to be encrypted
      *      @return The encrypted output as a Base64-encoded string
      *      @throws Exception If encryption fails
@@ -100,7 +100,7 @@ public class RC5 implements CryptographicAlgorithm {
     }
 
     /**
-     *      Decrypts the given Base64-encoded ciphertext using IDEA.
+     *      Decrypts the given Base64-encoded ciphertext using RC5.
      *      @param cipherText The encrypted text to be decrypted
      *      @return The decrypted output as a String
      *      @throws Exception If decryption fails
@@ -132,7 +132,7 @@ public class RC5 implements CryptographicAlgorithm {
     }
 
     /**
-     *      Returns the name of the IDEA algorithm being used.
+     *      Returns the name of the RC5 algorithm being used.
      *      @return Algorithm name in the format "IDEA-mode-padding"
      */
     @Override

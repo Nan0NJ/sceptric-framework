@@ -19,6 +19,8 @@ public class Sceptric {
         testRC4();
         System.out.println("----------------------------------------------------");
         testRC5();
+        System.out.println("----------------------------------------------------");
+        testRC6();
     }
 
     /**
@@ -282,6 +284,40 @@ public class Sceptric {
                             System.out.println("Success: " + testString.equals(decrypted));
                         } catch (Exception e) {
                             System.err.println("RC5 test failed for " + mode + "/" + padding + "/" + keySize + "/" + round + " rounds: " + e.getMessage());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * Tests RC6 encryption and decryption to verify correctness.
+     */
+    public static void testRC6() throws Exception {
+        String[] modes = {"ECB", "CBC", "CFB", "CTR"};
+        String[] paddings = {"PKCS5Padding", "NoPadding"};
+        int[] keySizes = {128, 192, 256}; // RC6 supports 32 to 2048-bit keys
+        int[] rounds = {12, 16, 20}; // Common RC6 rounds
+        String testString = "Let's check if RC6 encrypts true";
+
+        for (String mode : modes) {
+            for (String padding : paddings) {
+                for (int keySize : keySizes) {
+                    for (int round : rounds) {
+                        try {
+                            CryptographicAlgorithm cipher = new RC6(mode, padding, keySize, round);
+                            System.out.println("\nTesting " + cipher.getAlgorithmName() + " with " + keySize + " bits and " + round + " rounds:");
+                            System.out.println("Original: " + testString);
+
+                            String encrypted = cipher.encrypt(testString);
+                            System.out.println("Encrypted: " + encrypted);
+
+                            String decrypted = cipher.decrypt(encrypted);
+                            System.out.println("Decrypted: " + decrypted);
+
+                            System.out.println("Success: " + testString.equals(decrypted));
+                        } catch (Exception e) {
+                            System.err.println("RC6 test failed for " + mode + "/" + padding + "/" + keySize + "/" + round + " rounds: " + e.getMessage());
                         }
                     }
                 }

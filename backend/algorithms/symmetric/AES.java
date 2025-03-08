@@ -24,13 +24,13 @@ import java.util.Base64;
 
 /**
  *      AES implementation.
- *      Allows switching between ECB, CBC, and GCM modes,
+ *      Allows switching between ECB, CBC, CTR, CFB, OFB and GCM modes,
  *      Modification of key sizes of 128, 192, and 256 bits.
  */
 public class AES implements CryptographicAlgorithm {
 
     /**
-     *      Constructs of AES instance with the specified mode, padding, and key size.
+     *      Constructs an AES instance with the specified mode, padding, and key size.
      *      The AES mode (ECB, CBC, GCM)
      *      The padding scheme (PKCS5Padding, NoPadding)
      *      The key size in bits (128, 192, or 256)
@@ -45,7 +45,19 @@ public class AES implements CryptographicAlgorithm {
         this.mode = mode;
         this.padding = padding;
 
-        String transformation = mode.equals("GCM") ? "AES/GCM/NoPadding" : "AES/" + mode + "/" + padding;
+        String transformation;
+        if (mode.equals("GCM")) {
+            transformation = "AES/GCM/NoPadding";
+        } else if (mode.equals("CTR")) {
+            transformation = "AES/CTR/NoPadding";
+        } else if (mode.equals("CFB")) {
+            transformation = "AES/CFB128/NoPadding";
+        } else if (mode.equals("OFB")) {
+            transformation = "AES/OFB128/NoPadding";
+        } else {
+            transformation = "AES/" + mode + "/" + padding;
+        }
+
         this.cipher = Cipher.getInstance(transformation);
         this.key = generateKey(keySize);
 
@@ -81,7 +93,7 @@ public class AES implements CryptographicAlgorithm {
 
         if (mode.equals("GCM")) {
             cipher.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(128, iv));
-        } else if (mode.equals("CBC")) {
+        } else if (!mode.equals("ECB")) { // CBC, CTR, CFB, OFB
             cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(iv));
         } else { // ECB
             cipher.init(Cipher.ENCRYPT_MODE, key);
@@ -123,7 +135,7 @@ public class AES implements CryptographicAlgorithm {
 
             if (mode.equals("GCM")) {
                 cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(128, iv));
-            } else { // CBC
+            } else { // CBC, CTR, CFB128, OFB128
                 cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
             }
             return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);

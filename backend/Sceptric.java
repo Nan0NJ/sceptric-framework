@@ -11,31 +11,31 @@ public class Sceptric {
     public static void main(String[] args) throws Exception {
         testAES();
         System.out.println("----------------------------------------------------");
-        testDES();
+        //testDES();
         System.out.println("----------------------------------------------------");
-        testDES3();
+        //testDES3();
         System.out.println("----------------------------------------------------");
-        testBLOWFISH();
+        //testBLOWFISH();
         System.out.println("----------------------------------------------------");
-        testIDEA();
+        //testIDEA();
         System.out.println("----------------------------------------------------");
-        testRC4();
+        //testRC4();
         System.out.println("----------------------------------------------------");
-        testRC5();
+        //testRC5();
         System.out.println("----------------------------------------------------");
-        testRC6();
+        //testRC6();
         System.out.println("----------------------------------------------------\n" +
                 "NOT STARTING WITH THE ASYMMETRIC ALGORITHMS\n" +
                 "----------------------------------------------------");
-        testRSA();
+        //testRSA();
         System.out.println("----------------------------------------------------");
-        testDSA();
+        //testDSA();
         System.out.println("----------------------------------------------------");
-        testDH();
+        //testDH();
         System.out.println("----------------------------------------------------");
-        testELGAMAL();
+        //testELGAMAL();
         System.out.println("----------------------------------------------------");
-        testPaillier();
+        //testPaillier();
     }
 
     /**
@@ -53,7 +53,7 @@ public class Sceptric {
         System.out.println("Encrypted 2: " + encrypted2);
         System.out.println("Are ciphertexts equal? " + encrypted1.equals(encrypted2));
 
-        String[] modes = {"ECB", "CBC", "GCM"};
+        String[] modes = {"ECB", "CBC", "CTR", "CFB128", "OFB128","GCM"};
         String[] paddings = {"PKCS5Padding"};
         int[] keySizes = {128, 192, 256};
         String testString = "Let's check if it will encrypt correctly";

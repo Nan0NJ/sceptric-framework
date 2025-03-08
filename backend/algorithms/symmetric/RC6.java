@@ -1,7 +1,7 @@
 package backend.algorithms.symmetric;
 import backend.services.CryptographicAlgorithm;
 
-//              Uses Java's standard cryptographic libraries for security and performance.
+// Uses Java's standard cryptographic libraries with Bouncy Castle for RC6 support.
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -9,63 +9,80 @@ import javax.crypto.spec.IvParameterSpec;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import java.security.Security;
 
-/**
- *      RC6 (Rivest Cipher 6) implementation.
- *      Block cipher,
- *      Supports ECB, CBC, CFB, and CTR modes.
- *      Varying Key size 128-256 bits,
- *      Varying rounds.
- */
 public class RC6 implements CryptographicAlgorithm {
 
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
+
     /**
-     *      Constructs of RC6 instance with the specified mode, padding, key size, and number of rounds.
-     *      The RC6 mode (ECB, CBC, CFB, CTR)
-     *      The padding scheme (PKCS5Padding, NoPadding)
-     *      Varying key size (128-256)
-     *      Varying rounds (1-255)
+     * Constructs an RC6 instance with the specified mode, padding, and key size.
+     * Note: RC6 in Bouncy Castle uses a fixed number of rounds (20).
+     * The RC6 mode (ECB, CBC, CFB, CTR, OFB)
+     * The padding scheme (PKCS5Padding, NoPadding)
+     * Varying key size (128-256)
      */
     private final Cipher cipher;
     private final SecretKey key;
     private final String mode;
     private final String padding;
-    private final int rounds;
     private byte[] iv;
 
-    public RC6(String mode, String padding, int keySize, int rounds) throws Exception {
+    public RC6(String mode, String padding, int keySize) throws Exception {
         if (keySize < 128 || keySize > 256 || keySize % 32 != 0) {
             throw new IllegalArgumentException("Invalid key size. RC6 supports key sizes of 128, 192, or 256 bits.");
-        }
-        if (rounds < 1 || rounds > 255) {
-            throw new IllegalArgumentException("Invalid round count. RC6 supports between 1 and 255 rounds.");
         }
 
         this.mode = mode;
         this.padding = padding;
-        this.rounds = rounds;
 
-        String transformation = "RC6/" + mode + "/" + padding;
-        this.cipher = Cipher.getInstance(transformation);
+        String transformation;
+        if (mode.equals("ECB")) {
+            transformation = "RC6/ECB/" + padding;
+        } else if (mode.equals("CBC")) {
+            transformation = "RC6/CBC/" + padding;
+        } else if (mode.equals("CTR")) {
+            transformation = "RC6/CTR/NoPadding";
+            if (!padding.equals("NoPadding")) {
+                throw new IllegalArgumentException("CTR mode requires NoPadding");
+            }
+        } else if (mode.equals("CFB")) {
+            transformation = "RC6/CFB128/NoPadding";
+            if (!padding.equals("NoPadding")) {
+                throw new IllegalArgumentException("CFB mode requires NoPadding");
+            }
+        } else if (mode.equals("OFB")) {
+            transformation = "RC6/OFB128/NoPadding";
+            if (!padding.equals("NoPadding")) {
+                throw new IllegalArgumentException("OFB mode requires NoPadding");
+            }
+        } else {
+            throw new UnsupportedOperationException("Unsupported mode: " + mode);
+        }
+
+        this.cipher = Cipher.getInstance(transformation, "BC");
         this.key = generateKey(keySize);
 
         if (!mode.equals("ECB")) {
-            this.iv = new byte[16]; // Fixed 16-byte IVs
+            this.iv = new byte[16]; // Fixed 16-byte IVs for RC6's 128-bit block size
             new SecureRandom().nextBytes(this.iv);
         }
     }
 
     private SecretKey generateKey(int keySize) throws Exception {
-        KeyGenerator keyGen = KeyGenerator.getInstance("RC6");
+        KeyGenerator keyGen = KeyGenerator.getInstance("RC6", "BC");
         keyGen.init(keySize);
         return keyGen.generateKey();
     }
 
     /**
-     *      Encrypts the given plaintext using RC6.
-     *      @param plainText The input text to be encrypted
-     *      @return The encrypted output as a Base64-encoded string
-     *      @throws Exception If encryption fails
+     * Encrypts the given plaintext using RC6.
+     * @param plainText The input text to be encrypted
+     * @return The encrypted output as a Base64-encoded string
+     * @throws Exception If encryption fails
      */
     @Override
     public String encrypt(String plainText) throws Exception {
@@ -100,10 +117,10 @@ public class RC6 implements CryptographicAlgorithm {
     }
 
     /**
-     *      Decrypts the given Base64-encoded ciphertext using RC6.
-     *      @param cipherText The encrypted text to be decrypted
-     *      @return The decrypted output as a String
-     *      @throws Exception If decryption fails
+     * Decrypts the given Base64-encoded ciphertext using RC6.
+     * @param cipherText The encrypted text to be decrypted
+     * @return The decrypted output as a String
+     * @throws Exception If decryption fails
      */
     @Override
     public String decrypt(String cipherText) throws Exception {
@@ -132,11 +149,11 @@ public class RC6 implements CryptographicAlgorithm {
     }
 
     /**
-     *      Returns the name of the RC6 algorithm being used.
-     *      @return Algorithm name in the format "IDEA-mode-padding"
+     * Returns the name of the RC6 algorithm being used.
+     * @return Algorithm name in the format "RC6-mode-padding"
      */
     @Override
     public String getAlgorithmName() {
-        return "RC6-" + mode + "-" + padding + "-" + rounds + "Rounds";
+        return "RC6-" + mode + "-" + padding;
     }
 }

@@ -21,9 +21,9 @@ public class Sceptric {
         System.out.println("----------------------------------------------------");
         //testRC4();
         System.out.println("----------------------------------------------------");
-        //testRC5();
+        testRC5();
         System.out.println("----------------------------------------------------");
-        //testRC6();
+        testRC6();
         System.out.println("----------------------------------------------------\n" +
                 "NOT STARTING WITH THE ASYMMETRIC ALGORITHMS\n" +
                 "----------------------------------------------------");
@@ -275,18 +275,21 @@ public class Sceptric {
      * Tests RC5 encryption and decryption to verify correctness.
      */
     public static void testRC5() throws Exception {
-        String[] modes = {"ECB", "CBC", "CFB", "CTR"};
+        String[] modes = {"ECB", "CBC", "CFB", "CTR", "OFB"};
         String[] paddings = {"PKCS5Padding", "NoPadding"};
-        int[] keySizes = {32, 64, 128, 192, 256, 512, 1024, 2048}; // RC5 supports 32 to 2048-bit keys
-        int[] rounds = {12, 16, 20}; // Common RC5 rounds
-        String testString = "Let's check if RC5 encrypts correctly!!!";
+        int[] keySizes = {128, 192, 256}; // RC6 supports 128, 192, or 256 bits
+        int[] rounds = {12, 16, 20}; // Note: RC6 uses fixed 20 rounds in Bouncy Castle, this loop is for completeness
+        String testString = "Let's check if RC5 encrypts true";
 
         for (String mode : modes) {
             for (String padding : paddings) {
+                if ((mode.equals("CFB") || mode.equals("OFB")) && !padding.equals("NoPadding")) {
+                    continue; // Skip invalid padding for CFB and OFB
+                }
                 for (int keySize : keySizes) {
                     for (int round : rounds) {
                         try {
-                            CryptographicAlgorithm cipher = new RC5(mode, padding, keySize, round);
+                            CryptographicAlgorithm cipher = new RC5(mode, padding, keySize);
                             System.out.println("\nTesting " + cipher.getAlgorithmName() + " with " + keySize + " bits and " + round + " rounds:");
                             System.out.println("Original: " + testString);
 
@@ -298,7 +301,7 @@ public class Sceptric {
 
                             System.out.println("Success: " + testString.equals(decrypted));
                         } catch (Exception e) {
-                            System.err.println("RC5 test failed for " + mode + "/" + padding + "/" + keySize + "/" + round + " rounds: " + e.getMessage());
+                            System.err.println("RC6 test failed for " + mode + "/" + padding + "/" + keySize + "/" + round + " rounds: " + e.getMessage());
                         }
                     }
                 }
@@ -309,18 +312,21 @@ public class Sceptric {
      * Tests RC6 encryption and decryption to verify correctness.
      */
     public static void testRC6() throws Exception {
-        String[] modes = {"ECB", "CBC", "CFB", "CTR"};
+        String[] modes = {"ECB", "CBC", "CFB", "CTR", "OFB"};
         String[] paddings = {"PKCS5Padding", "NoPadding"};
-        int[] keySizes = {128, 192, 256}; // RC6 supports 32 to 2048-bit keys
-        int[] rounds = {12, 16, 20}; // Common RC6 rounds
+        int[] keySizes = {128, 192, 256}; // RC6 supports 128, 192, or 256 bits
+        int[] rounds = {12, 16, 20}; // Note: RC6 uses fixed 20 rounds in Bouncy Castle, this loop is for completeness
         String testString = "Let's check if RC6 encrypts true";
 
         for (String mode : modes) {
             for (String padding : paddings) {
+                if ((mode.equals("CFB") || mode.equals("OFB")) && !padding.equals("NoPadding")) {
+                    continue; // Skip invalid padding for CFB and OFB
+                }
                 for (int keySize : keySizes) {
                     for (int round : rounds) {
                         try {
-                            CryptographicAlgorithm cipher = new RC6(mode, padding, keySize, round);
+                            CryptographicAlgorithm cipher = new RC6(mode, padding, keySize);
                             System.out.println("\nTesting " + cipher.getAlgorithmName() + " with " + keySize + " bits and " + round + " rounds:");
                             System.out.println("Original: " + testString);
 

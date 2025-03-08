@@ -13,7 +13,7 @@ public class Sceptric {
         System.out.println("----------------------------------------------------");
         //testDES();
         System.out.println("----------------------------------------------------");
-        testDES3();
+        //testDES3();
         System.out.println("----------------------------------------------------");
         //testBLOWFISH();
         System.out.println("----------------------------------------------------");
@@ -175,7 +175,7 @@ public class Sceptric {
         System.out.println("Encrypted 2: " + encrypted2);
         System.out.println("Are ciphertexts equal? " + encrypted1.equals(encrypted2));
 
-        String[] modes = {"ECB", "CBC", "CFB", "CTR"};
+        String[] modes = {"ECB", "CBC", "CFB", "CTR","OFB"};
         String[] paddings = {"PKCS5Padding", "NoPadding"};
         int[] keySizes = {32, 64, 128, 192, 256, 448}; // Blowfish supports key sizes from 32 to 448 bits
         String testString = "Let's check if Blowfish encrypts correct";
@@ -217,7 +217,7 @@ public class Sceptric {
         System.out.println("Encrypted 2: " + encrypted2);
         System.out.println("Are ciphertexts equal? " + encrypted1.equals(encrypted2));
 
-        String[] modes = {"ECB", "CBC", "CFB", "CTR"};
+        String[] modes = {"ECB", "CBC", "CFB", "CTR", "OFB"};
         String[] paddings = {"NoPadding", "PKCS5Padding"};
         String testString = "Let's check if IDEA encrypts correctly!!";
 

@@ -25,14 +25,14 @@ import java.util.Base64;
 
 /**
  *      Blowfish implementation.
- *      Allows switching between ECB, CBC, CFB, and CTR modes,
+ *      Allows switching between ECB, CBC, CFB, OFB, and CTR modes,
  *      The key sizes ranging from 32 to 448 bits.
  */
 public class BLOWFISH implements CryptographicAlgorithm {
 
     /**
      *      Constructs of Blowfish instance with the specified mode, padding, and key size.
-     *      The Blowfish mode (ECB, CBC, CFB, CTR)
+     *      The Blowfish mode (ECB, CBC, CFB, OFB, CTR)
      *      The padding scheme (PKCS5Padding, NoPadding)
      *      The key size in bits (32 - 448)
      */
@@ -46,7 +46,13 @@ public class BLOWFISH implements CryptographicAlgorithm {
         this.mode = mode;
         this.padding = padding;
 
-        String transformation = mode.equals("CTR") ? "Blowfish/CTR/NoPadding" : "Blowfish/" + mode + "/" + padding;
+        String transformation;
+        if (mode.equals("CTR") || mode.equals("OFB")) {
+            transformation = "Blowfish/" + mode + "/NoPadding";
+        } else {
+            transformation = "Blowfish/" + mode + "/" + padding;
+        }
+
         this.cipher = Cipher.getInstance(transformation);
         this.key = generateKey(keySize);
 

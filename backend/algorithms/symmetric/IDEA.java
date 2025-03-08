@@ -21,14 +21,14 @@ import java.util.Base64;
 
 /**
  *      IDEA (International Data Encryption Algorithm) implementation using Bouncy Castle.
- *      Allows switching  between ECB, CBC, CFB, and CTR modes,
+ *      Allows switching  between ECB, CBC, CFB, OFB, and CTR modes,
  *      Fixed key size of 128 bits.
  */
 public class IDEA implements CryptographicAlgorithm {
 
     /**
      *      Constructs of IDEA instance with the specified mode, padding, and key size.
-     *      The IDEA mode (ECB, CBC, CFB, CTR)
+     *      The IDEA mode (ECB, CBC, CFB, OFB, CTR)
      *      The padding scheme (PKCS5Padding, NoPadding)
      *      Fixed key size (56)
      */

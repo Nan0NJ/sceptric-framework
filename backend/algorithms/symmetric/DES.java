@@ -22,14 +22,14 @@ import java.util.Base64;
 
 /**
  *      DES implementation.
- *      Allows switching between ECB, CBC, CFB and CTR modes,
+ *      Allows switching between ECB, CBC, CFB, CTR and OFB modes,
  *      Fixed key sizes of 56 bits.
  */
 public class DES implements CryptographicAlgorithm {
 
     /**
      *      Constructs of DES instance with the specified mode, padding, and key size.
-     *      The DES mode (ECB, CBC, CFB, CTR)
+     *      The DES mode (ECB, CBC, CFB, CTR, OFB)
      *      The padding scheme (PKCS5Padding, NoPadding)
      *      Fixed key size (56)
      */
@@ -43,7 +43,13 @@ public class DES implements CryptographicAlgorithm {
         this.mode = mode;
         this.padding = padding;
 
-        String transformation = mode.equals("CTR") ? "DES/CTR/NoPadding" : "DES/" + mode + "/" + padding;
+        String transformation;
+        if (mode.equals("CTR") || mode.equals("OFB")) {
+            transformation = "DES/" + mode + "/NoPadding";
+        } else {
+            transformation = "DES/" + mode + "/" + padding;
+        }
+
         this.cipher = Cipher.getInstance(transformation);
         this.key = generateKey();
 

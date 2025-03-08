@@ -9,11 +9,11 @@ import java.security.PublicKey;
 public class Sceptric {
 
     public static void main(String[] args) throws Exception {
-        testAES();
+        //testAES();
         System.out.println("----------------------------------------------------");
         //testDES();
         System.out.println("----------------------------------------------------");
-        //testDES3();
+        testDES3();
         System.out.println("----------------------------------------------------");
         //testBLOWFISH();
         System.out.println("----------------------------------------------------");
@@ -95,7 +95,7 @@ public class Sceptric {
         System.out.println("Encrypted 2: " + encrypted2);
         System.out.println("Are ciphertexts equal? " + encrypted1.equals(encrypted2));
 
-        String[] modes = {"ECB", "CBC", "CFB", "CTR"};
+        String[] modes = {"ECB", "CBC", "CFB", "CTR", "OFB"};
         String[] paddings = {"NoPadding", "PKCS5Padding"};
         String testString = "Let's check if DES encrypts correctly!!!";
 
@@ -138,7 +138,7 @@ public class Sceptric {
         System.out.println("Encrypted 2: " + encrypted2);
         System.out.println("Are ciphertexts equal? " + encrypted1.equals(encrypted2));
 
-        String[] modes = {"ECB", "CBC", "CFB", "CTR"};
+        String[] modes = {"ECB", "CBC", "CFB", "CTR", "OFB"};
         String[] paddings = {"PKCS5Padding", "NoPadding"};
         String testString = "Let's check if 3DES encrypts correctly!!";
 

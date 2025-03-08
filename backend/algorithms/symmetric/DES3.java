@@ -24,14 +24,14 @@ import java.util.Base64;
 
 /**
  *      Triple DES (3DES) implementation.
- *      Allows switching between ECB, CBC, CFB, and CTR modes,
+ *      Allows switching between ECB, CBC, CFB, OFB and CTR modes,
  *      Fixed key size of 168 bits.
  */
 public class DES3 implements CryptographicAlgorithm {
 
     /**
      *      Constructs of 3DES instance with the specified mode, padding, and key size.
-     *      The 3DES mode (ECB, CBC, CFB, CTR)
+     *      The 3DES mode (ECB, CBC, CFB, OFB, CTR)
      *      The padding scheme (PKCS5Padding, NoPadding)
      *      Fixed key size (56)
      */
@@ -45,7 +45,13 @@ public class DES3 implements CryptographicAlgorithm {
         this.mode = mode;
         this.padding = padding;
 
-        String transformation = mode.equals("CTR") ? "DESede/CTR/NoPadding" : "DESede/" + mode + "/" + padding;
+        String transformation;
+        if (mode.equals("CTR") || mode.equals("OFB")) {
+            transformation = "DESede/" + mode + "/NoPadding";
+        } else {
+            transformation = "DESede/" + mode + "/" + padding;
+        }
+
         this.cipher = Cipher.getInstance(transformation);
         this.key = generateKey();
 

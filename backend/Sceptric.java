@@ -10,6 +10,8 @@ import oshi.hardware.PowerSource;
 import oshi.hardware.HardwareAbstractionLayer;
 import oshi.software.os.OperatingSystem;
 import oshi.software.os.OSProcess;
+
+import java.security.PublicKey;
 import java.util.List;
 
 public class Sceptric {
@@ -17,13 +19,26 @@ public class Sceptric {
     public static void main(String[] args) throws Exception {
 
         // Manual test example
-        CryptographicAlgorithm algorithm1 = new RSA("OAEPWithSHA-256AndMGF1Padding", 1024);
-        CryptographicAlgorithm algorithm2 = new AES("ECB", "PKCS5Padding", 128);
+        DH algorithm = new DH(1024);
+        /*
+
+            HOW I WANT DH TO WORK:
+            CryptographicAlgorithm algo = new DH(1024, whatever else if needed);
+            String plainText = "Hello World!";
+            evaluationTest(algo, plainText);
+
+            AND I WANT evaluationTest to not change.
+
+        */
+        CryptographicAlgorithm given = new DH(1024);
+        //CryptographicAlgorithm algorithm1 = new RSA("OAEPWithSHA-256AndMGF1Padding", 1024);
+        CryptographicAlgorithm algorithm2 = new AES("CBC", "PKCS5Padding", 128);
         String plainText = "Hello, World!";
         SystemInfo si = new SystemInfo();
         String cpuName = si.getHardware().getProcessor().getProcessorIdentifier().getName().trim();
         System.out.println("CPU: " + cpuName);
-        evaluationTest(algorithm1, plainText);
+        evaluationTest(given, plainText);
+        //evaluationTest(algorithm1, plainText);
         System.out.println("---------------------------------------------------------------------------------------------");
         evaluationTest(algorithm2, plainText);
     }
@@ -118,6 +133,42 @@ public class Sceptric {
 
         } catch (Exception e) {
             System.err.println("Evaluation failed for " + algorithm.getAlgorithmName() + ": " + e.getMessage());
+        }
+    }
+    /**
+     * Tests Diffie-Hellman key exchange to verify shared secret agreement.
+     */
+    public static void testDH() throws Exception {
+        int[] keySizes = {1024, 2048}; // Supported DH key sizes
+        // 4096 is too large so bottleneck causes it to take a lot of time --- meaning that big key size doesn't mean better overall.
+        for (int keySize : keySizes) {
+            try {
+                System.out.println("\nTesting Diffie-Hellman key exchange with " + keySize + " bits:");
+
+                // Generate key pairs for Alice and Bob
+                DH alice = new DH(keySize);
+                DH bob = new DH(keySize);
+
+                // Exchange public keys
+                String alicePublicKeyEncoded = alice.getEncodedPublicKey();
+                String bobPublicKeyEncoded = bob.getEncodedPublicKey();
+
+                PublicKey alicePublicKey = DH.decodePublicKey(alicePublicKeyEncoded);
+                PublicKey bobPublicKey = DH.decodePublicKey(bobPublicKeyEncoded);
+
+                // Compute shared secrets
+                String aliceSharedSecret = alice.generateSharedSecret(bobPublicKey);
+                String bobSharedSecret = bob.generateSharedSecret(alicePublicKey);
+
+                System.out.println("Alice's Shared Secret: " + aliceSharedSecret);
+                System.out.println("Bob's Shared Secret: " + bobSharedSecret);
+
+                // Verify both parties derive the same shared secret
+                boolean isSuccess = aliceSharedSecret.equals(bobSharedSecret);
+                System.out.println("Shared Secret Match: " + (isSuccess ? "Success" : "Failure"));
+            } catch (Exception e) {
+                System.err.println("Diffie-Hellman test failed for " + keySize + " bits: " + e.getMessage());
+            }
         }
     }
 }

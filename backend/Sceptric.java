@@ -17,30 +17,20 @@ import java.util.List;
 public class Sceptric {
 
     public static void main(String[] args) throws Exception {
-
-        // Manual test example
-        DH algorithm = new DH(1024);
-        /*
-
-            HOW I WANT DH TO WORK:
-            CryptographicAlgorithm algo = new DH(1024, whatever else if needed);
-            String plainText = "Hello World!";
-            evaluationTest(algo, plainText);
-
-            AND I WANT evaluationTest to not change.
-
-        */
-        CryptographicAlgorithm given = new DH(1024);
-        //CryptographicAlgorithm algorithm1 = new RSA("OAEPWithSHA-256AndMGF1Padding", 1024);
-        CryptographicAlgorithm algorithm2 = new AES("CBC", "PKCS5Padding", 128);
+        // Test DH
+        CryptographicAlgorithm dhAlgorithm = new DH(1024);
+        CryptographicAlgorithm samAlgorithm = new SAM(1024); // AES key generated internally
+        CryptographicAlgorithm aesAlgorithm = new AES("ECB", "PKCS5Padding", 128);
         String plainText = "Hello, World!";
-        SystemInfo si = new SystemInfo();
-        String cpuName = si.getHardware().getProcessor().getProcessorIdentifier().getName().trim();
-        System.out.println("CPU: " + cpuName);
-        evaluationTest(given, plainText);
-        //evaluationTest(algorithm1, plainText);
+
+        System.out.println("Testing DH:");
+        evaluationTest(dhAlgorithm, plainText);
         System.out.println("---------------------------------------------------------------------------------------------");
-        evaluationTest(algorithm2, plainText);
+        System.out.println("Testing SAM:");
+        evaluationTest(samAlgorithm, plainText);
+        System.out.println("---------------------------------------------------------------------------------------------");
+        System.out.println("Testing AES:");
+        evaluationTest(aesAlgorithm, plainText);
     }
 
     /**

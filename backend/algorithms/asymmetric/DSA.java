@@ -1,5 +1,6 @@
 package backend.algorithms.asymmetric;
 
+import backend.services.CryptographicAlgorithm;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -9,8 +10,9 @@ import java.util.Base64;
  *      DSA (Digital Signature Algorithm) implementation using Bouncy Castle.
  *      Used for digital signatures (signing and verification), not encryption.
  *      Varying key sizes (1024, 2048, 3072 bits).
+ *      CAN WE IMPLEMENT A SAM (SECURE AUTHENTICATED MESSAGING PROTOCOL TO WORK WITH ENCRYPTION AND DECRYPTION)
  */
-public class DSA {
+public class DSA implements CryptographicAlgorithm {
 
     /**
      *      Constructs of DSA instance with the specified key size.
@@ -73,6 +75,30 @@ public class DSA {
         signature.update(message.getBytes(StandardCharsets.UTF_8));
         byte[] decodedSignature = Base64.getDecoder().decode(signedMessage);
         return signature.verify(decodedSignature);
+    }
+
+    public PublicKey getPublicKey() {
+        return publicKey;
+    }
+
+    public String getEncodedPublicKey() {
+        return Base64.getEncoder().encodeToString(publicKey.getEncoded());
+    }
+
+    public static PublicKey decodePublicKey(String encodedPublicKey) throws Exception {
+        byte[] decodedBytes = Base64.getDecoder().decode(encodedPublicKey);
+        KeyFactory keyFactory = KeyFactory.getInstance("DSA", "BC");
+        return keyFactory.generatePublic(new java.security.spec.X509EncodedKeySpec(decodedBytes));
+    }
+
+    @Override
+    public String encrypt(String plainText) throws Exception {
+        throw new UnsupportedOperationException("DSA is a signing algorithm and does not support encryption. Check SAM Protocol where DSA is used.");
+    }
+
+    @Override
+    public String decrypt(String cipherText) throws Exception {
+        throw new UnsupportedOperationException("DSA is a signing algorithm and does not support decryption. Check SAM Protocol where DSA is used.");
     }
 
     public String getAlgorithmName() {

@@ -66,7 +66,7 @@ public class DH implements CryptographicAlgorithm {
     private SecretKeySpec deriveAESKey(byte[] sharedSecret) throws Exception {
         MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
         byte[] hashedSecret = sha256.digest(sharedSecret);
-        /// Use first 16 bytes for AES-128; adjust to 24 or 32 for AES-192/256 if desired
+        /// Use first 16 bytes for AES-128; Use first 24 bytes for AES-192; Use first 32 bytes for 256;
         byte[] keyBytes = Arrays.copyOf(hashedSecret, 16);
         return new SecretKeySpec(keyBytes, "AES");
     }

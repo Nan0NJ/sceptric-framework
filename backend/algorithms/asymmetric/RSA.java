@@ -4,6 +4,7 @@ import backend.services.CryptographicAlgorithm;
 //              + Additional Bouncy Castle JCA (since IDEA is not supported in JCE)
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import javax.crypto.Cipher;
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Base64;
@@ -16,7 +17,7 @@ public class RSA implements CryptographicAlgorithm {
 
     /**
      *      Constructs of RSA instance with the specified padding, and key size.
-     *      The padding scheme (OAEPWithSHA-256, PKCS1Padding, and NoPadding)
+     *      The padding scheme (PKCS1Padding, and NoPadding)
      *      Varying key size (1024, 2048, 4096).
      */
     private final Cipher cipher;
@@ -60,10 +61,24 @@ public class RSA implements CryptographicAlgorithm {
     public String encrypt(String plainText) throws Exception {
         if (plainText == null) throw new IllegalArgumentException("Plaintext cannot be null");
 
+        // Adjust block size for PKCS1Padding (11-byte overhead) or NoPadding (full block size)
+        int paddingOverhead = padding.equals("PKCS1Padding") ? 11 : 0;
+        int maxBlockSize = (keySize / 8) - paddingOverhead;
+
+        byte[] inputBytes = plainText.getBytes(StandardCharsets.UTF_8);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-        byte[] encrypted = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
-        return Base64.getEncoder().encodeToString(encrypted);
+
+        // Encrypt in chunks
+        for (int i = 0; i < inputBytes.length; i += maxBlockSize) {
+            int length = Math.min(inputBytes.length - i, maxBlockSize);
+            byte[] encryptedBlock = cipher.doFinal(inputBytes, i, length);
+            outputStream.write(encryptedBlock);
+        }
+
+        return Base64.getEncoder().encodeToString(outputStream.toByteArray());
     }
+
 
     /**
      *      Decrypts the given Base64-encoded ciphertext using RC6.
@@ -75,10 +90,22 @@ public class RSA implements CryptographicAlgorithm {
     public String decrypt(String cipherText) throws Exception {
         if (cipherText == null) throw new IllegalArgumentException("Ciphertext cannot be null");
 
+        byte[] encryptedBytes = Base64.getDecoder().decode(cipherText);
+        int blockSize = keySize / 8; // RSA block size
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
-        byte[] decrypted = cipher.doFinal(Base64.getDecoder().decode(cipherText));
-        return new String(decrypted, StandardCharsets.UTF_8);
+
+        // Decrypt in chunks
+        for (int i = 0; i < encryptedBytes.length; i += blockSize) {
+            int length = Math.min(encryptedBytes.length - i, blockSize);
+            byte[] decryptedBlock = cipher.doFinal(encryptedBytes, i, length);
+            outputStream.write(decryptedBlock);
+        }
+
+        return new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
     }
+
 
     /**
      *      Returns the name of the RC6 algorithm being used.

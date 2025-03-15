@@ -11,27 +11,254 @@ import oshi.hardware.HardwareAbstractionLayer;
 import oshi.software.os.OperatingSystem;
 import oshi.software.os.OSProcess;
 
-import java.security.PublicKey;
 import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Sceptric {
 
-    public static void main(String[] args) throws Exception {
-        // Test DH
-        CryptographicAlgorithm dhAlgorithm = new DH(1024);
-        CryptographicAlgorithm samAlgorithm = new SAM(1024); // AES key generated internally
-        CryptographicAlgorithm aesAlgorithm = new AES("ECB", "PKCS5Padding", 128);
-        String plainText = "Hello, World!";
+    ///     Enum to store all algorithm configurations
+    public enum AlgorithmType {
+        // AES Algorithms
+        AES_ECB_128("AES", "ECB", "PKCS5Padding", 128),
+        AES_ECB_192("AES", "ECB", "PKCS5Padding", 192),
+        AES_ECB_256("AES", "ECB", "PKCS5Padding", 256),
+        AES_CBC_128("AES", "CBC", "PKCS5Padding", 128),
+        AES_CBC_192("AES", "CBC", "PKCS5Padding", 192),
+        AES_CBC_256("AES", "CBC", "PKCS5Padding", 256),
+        AES_CTR_128("AES", "CTR", "PKCS5Padding", 128),
+        AES_CTR_192("AES", "CTR", "PKCS5Padding", 192),
+        AES_CTR_256("AES", "CTR", "PKCS5Padding", 256),
+        AES_CFB128_128("AES", "CFB128", "PKCS5Padding", 128),
+        AES_CFB128_192("AES", "CFB128", "PKCS5Padding", 192),
+        AES_CFB128_256("AES", "CFB128", "PKCS5Padding", 256),
+        AES_OFB128_128("AES", "OFB128", "PKCS5Padding", 128),
+        AES_OFB128_192("AES", "OFB128", "PKCS5Padding", 192),
+        AES_OFB128_256("AES", "OFB128", "PKCS5Padding", 256),
+        AES_GCM_128("AES", "GCM", "PKCS5Padding", 128),
+        AES_GCM_192("AES", "GCM", "PKCS5Padding", 192),
+        AES_GCM_256("AES", "GCM", "PKCS5Padding", 256),
 
-        System.out.println("Testing DH:");
-        evaluationTest(dhAlgorithm, plainText);
-        System.out.println("---------------------------------------------------------------------------------------------");
-        System.out.println("Testing SAM:");
-        evaluationTest(samAlgorithm, plainText);
-        System.out.println("---------------------------------------------------------------------------------------------");
-        System.out.println("Testing AES:");
-        evaluationTest(aesAlgorithm, plainText);
+        // DES Algorithms
+        DES_ECB("DES", "ECB", "PKCS5Padding", 0),
+        DES_CBC("DES", "CBC", "PKCS5Padding", 0),
+        DES_CTR("DES", "CTR", "NoPadding", 0),
+        DES_CFB_P("DES", "CFB", "PKCS5Padding", 0),
+        DES_CFB_N("DES", "CFB", "NoPadding", 0),
+        DES_OFB_P("DES", "OFB", "PKCS5Padding", 0),
+        DES_OFB_N("DES", "OFB", "NoPadding", 0),
+
+        // DES3 (Triple DES) Algorithms
+        TDES_ECB("DES3", "ECB", "PKCS5Padding", 0),
+        TDES_CBC("DES3", "CBC", "PKCS5Padding", 0),
+        TDES_CTR("DES3", "CTR", "NoPadding", 0),
+        TDES_CFB_P("DES3", "CFB", "PKCS5Padding", 0),
+        TDES_CFB_N("DES3", "CFB", "NoPadding", 0),
+        TDES_OFB_P("DES3", "OFB", "PKCS5Padding", 0),
+        TDES_OFB_N("DES3", "OFB", "NoPadding", 0),
+
+        // Blowfish Algorithms
+        BLOWFISH_ECB_32("BLOWFISH", "ECB", "PKCS5Padding", 32),
+        BLOWFISH_ECB_64("BLOWFISH", "ECB", "PKCS5Padding", 64),
+        BLOWFISH_ECB_128("BLOWFISH", "ECB", "PKCS5Padding", 128),
+        BLOWFISH_ECB_192("BLOWFISH", "ECB", "PKCS5Padding", 192),
+        BLOWFISH_ECB_256("BLOWFISH", "ECB", "PKCS5Padding", 256),
+        BLOWFISH_ECB_448("BLOWFISH", "ECB", "PKCS5Padding", 448),
+        BLOWFISH_CBC_32("BLOWFISH", "CBC", "PKCS5Padding", 32),
+        BLOWFISH_CBC_64("BLOWFISH", "CBC", "PKCS5Padding", 64),
+        BLOWFISH_CBC_128("BLOWFISH", "CBC", "PKCS5Padding", 128),
+        BLOWFISH_CBC_192("BLOWFISH", "CBC", "PKCS5Padding", 192),
+        BLOWFISH_CBC_256("BLOWFISH", "CBC", "PKCS5Padding", 256),
+        BLOWFISH_CBC_448("BLOWFISH", "CBC", "PKCS5Padding", 448),
+        BLOWFISH_CTR_P_32("BLOWFISH", "CTR", "PKCS5Padding", 32),
+        BLOWFISH_CTR_P_64("BLOWFISH", "CTR", "PKCS5Padding", 64),
+        BLOWFISH_CTR_P_128("BLOWFISH", "CTR", "PKCS5Padding", 128),
+        BLOWFISH_CTR_P_192("BLOWFISH", "CTR", "PKCS5Padding", 192),
+        BLOWFISH_CTR_P_256("BLOWFISH", "CTR", "PKCS5Padding", 256),
+        BLOWFISH_CTR_P_448("BLOWFISH", "CTR", "PKCS5Padding", 448),
+        BLOWFISH_CTR_N_32("BLOWFISH", "CTR", "NoPadding", 32),
+        BLOWFISH_CTR_N_64("BLOWFISH", "CTR", "NoPadding", 64),
+        BLOWFISH_CTR_N_128("BLOWFISH", "CTR", "NoPadding", 128),
+        BLOWFISH_CTR_N_192("BLOWFISH", "CTR", "NoPadding", 192),
+        BLOWFISH_CTR_N_256("BLOWFISH", "CTR", "NoPadding", 256),
+        BLOWFISH_CTR_N_448("BLOWFISH", "CTR", "NoPadding", 448),
+        BLOWFISH_CFB_P_32("BLOWFISH", "CFB", "PKCS5Padding", 32),
+        BLOWFISH_CFB_P_64("BLOWFISH", "CFB", "PKCS5Padding", 64),
+        BLOWFISH_CFB_P_128("BLOWFISH", "CFB", "PKCS5Padding", 128),
+        BLOWFISH_CFB_P_192("BLOWFISH", "CFB", "PKCS5Padding", 192),
+        BLOWFISH_CFB_P_256("BLOWFISH", "CFB", "PKCS5Padding", 256),
+        BLOWFISH_CFB_P_448("BLOWFISH", "CFB", "PKCS5Padding", 448),
+        BLOWFISH_CFB_N_32("BLOWFISH", "CFB", "NoPadding", 32),
+        BLOWFISH_CFB_N_64("BLOWFISH", "CFB", "NoPadding", 64),
+        BLOWFISH_CFB_N_128("BLOWFISH", "CFB", "NoPadding", 128),
+        BLOWFISH_CFB_N_192("BLOWFISH", "CFB", "NoPadding", 192),
+        BLOWFISH_CFB_N_256("BLOWFISH", "CFB", "NoPadding", 256),
+        BLOWFISH_CFB_N_448("BLOWFISH", "CFB", "NoPadding", 448),
+        BLOWFISH_OFB_P_32("BLOWFISH", "OFB", "PKCS5Padding", 32),
+        BLOWFISH_OFB_P_64("BLOWFISH", "OFB", "PKCS5Padding", 64),
+        BLOWFISH_OFB_P_128("BLOWFISH", "OFB", "PKCS5Padding", 128),
+        BLOWFISH_OFB_P_192("BLOWFISH", "OFB", "PKCS5Padding", 192),
+        BLOWFISH_OFB_P_256("BLOWFISH", "OFB", "PKCS5Padding", 256),
+        BLOWFISH_OFB_P_448("BLOWFISH", "OFB", "PKCS5Padding", 448),
+        BLOWFISH_OFB_N_32("BLOWFISH", "OFB", "NoPadding", 32),
+        BLOWFISH_OFB_N_64("BLOWFISH", "OFB", "NoPadding", 64),
+        BLOWFISH_OFB_N_128("BLOWFISH", "OFB", "NoPadding", 128),
+        BLOWFISH_OFB_N_192("BLOWFISH", "OFB", "NoPadding", 192),
+        BLOWFISH_OFB_N_256("BLOWFISH", "OFB", "NoPadding", 256),
+        BLOWFISH_OFB_N_448("BLOWFISH", "OFB", "NoPadding", 448),
+
+        // IDEA Algorithms
+        IDEA_ECB("IDEA", "ECB", "PKCS5Padding", 0),
+        IDEA_CBC("IDEA", "CBC", "PKCS5Padding", 0),
+        IDEA_CTR("IDEA", "CTR", "NoPadding", 0),
+        IDEA_CFB_P("IDEA", "CFB", "PKCS5Padding", 0),
+        IDEA_CFB_N("IDEA", "CFB", "NoPadding", 0),
+        IDEA_OFB_P("IDEA", "OFB", "PKCS5Padding", 0),
+        IDEA_OFB_N("IDEA", "OFB", "NoPadding", 0),
+
+        // RC4 Algorithms
+        RC4_40("RC4", "", "", 40),
+        RC4_64("RC4", "", "", 64),
+        RC4_128("RC4", "", "", 128),
+        RC4_192("RC4", "", "", 192),
+        RC4_256("RC4", "", "", 256),
+        RC4_1024("RC4", "", "", 1024),
+
+        // RC5 Algorithms
+        RC5_ECB_128("RC5", "ECB", "PKCS5Padding", 128),
+        RC5_EBC_192("RC5", "ECB", "PKCS5Padding", 192),
+        RC5_ECB_256("RC5", "ECB", "PKCS5Padding", 256),
+        RC5_CBC_128("RC5", "CBC", "PKCS5Padding", 128),
+        RC5_CBC_192("RC5", "CBC", "PKCS5Padding", 192),
+        RC5_CBC_256("RC5", "CBC", "PKCS5Padding", 256),
+        RC5_CTR_128("RC5", "CTR", "NoPadding", 128),
+        RC5_CTR_192("RC5", "CTR", "NoPadding", 192),
+        RC5_CTR_256("RC5", "CTR", "NoPadding", 256),
+        RC5_CFB_N_128("RC5", "CFB", "NoPadding", 128),
+        RC5_CFB_N_192("RC5", "CFB", "NoPadding", 192),
+        RC5_CFB_N_256("RC5", "CFB", "NoPadding", 256),
+        RC5_OFB_N_128("RC5", "OFB", "NoPadding", 128),
+        RC5_OFB_N_192("RC5", "OFB", "NoPadding", 192),
+        RC5_OFB_N_256("RC5", "OFB", "NoPadding", 256),
+
+        // RC6 Algorithms
+        RC6_ECB_128("RC6", "ECB", "PKCS5Padding", 128),
+        RC6_EBC_192("RC6", "ECB", "PKCS5Padding", 192),
+        RC6_ECB_256("RC6", "ECB", "PKCS5Padding", 256),
+        RC6_CBC_128("RC6", "CBC", "PKCS5Padding", 128),
+        RC6_CBC_192("RC6", "CBC", "PKCS5Padding", 192),
+        RC6_CBC_256("RC6", "CBC", "PKCS5Padding", 256),
+        RC6_CTR_128("RC6", "CTR", "NoPadding", 128),
+        RC6_CTR_192("RC6", "CTR", "NoPadding", 192),
+        RC6_CTR_256("RC6", "CTR", "NoPadding", 256),
+        RC6_CFB_N_128("RC6", "CFB", "NoPadding", 128),
+        RC6_CFB_N_192("RC6", "CFB", "NoPadding", 192),
+        RC6_CFB_N_256("RC6", "CFB", "NoPadding", 256),
+        RC6_OFB_N_128("RC6", "OFB", "NoPadding", 128),
+        RC6_OFB_N_192("RC6", "OFB", "NoPadding", 192),
+        RC6_OFB_N_256("RC6", "OFB", "NoPadding", 256),
+
+        // RSA Algorithms
+        RSA_PKCS1_1024("RSA", "PKCS1Padding", "", 1024),
+        RSA_PKCS1_2048("RSA", "PKCS1Padding", "", 2048),
+        RSA_PKCS1_4096("RSA", "PKCS1Padding", "", 4096),
+        RSA_NOPAD_1024("RSA", "NoPadding", "", 1024),
+        RSA_NOPAD_2048("RSA", "NoPadding", "", 2048),
+        RSA_NOPAD_4096("RSA", "NoPadding", "", 4096),
+
+        // SAM Algorithms
+        SAM_1024("SAM", "", "", 1024),
+        SAM_2048("SAM", "", "", 2048),
+        SAM_3072("SAM", "", "", 3072),
+
+        // DH Algorithms
+        DH_1024("DH", "", "", 1024),
+        DH_2048("DH", "", "", 2048),
+        DH_4096("DH", "", "", 4096),
+
+        // ElGamal Algorithms
+        ELGAMAL_1024("ELGAMAL", "", "", 1024),
+        ELGAMAL_2048("ELGAMAL", "", "", 2048),
+        ELGAMAL_4096("ELGAMAL", "", "", 4096),
+
+        // Paillier Algorithms (Hybrid)
+        PAILLIER_1024("PAILLIER", "", "", 1024),
+        PAILLIER_2048("PAILLIER", "", "", 2048),
+        PAILLIER_4096("PAILLIER", "", "", 4096);
+
+        private final String algorithm;
+        private final String mode;
+        private final String padding;
+        private final int keySize;
+
+        AlgorithmType(String algorithm, String mode, String padding, int keySize) {
+            this.algorithm = algorithm;
+            this.mode = mode;
+            this.padding = padding;
+            this.keySize = keySize;
+        }
+
+        public CryptographicAlgorithm createAlgorithm() throws Exception {
+            switch (algorithm) {
+                case "AES":
+                    return new AES(mode, padding, keySize);
+                case "DES":
+                    return new DES(mode, padding);
+                case "DES3":
+                    return new DES3(mode, padding);
+                case "BLOWFISH":
+                    return new BLOWFISH(mode, padding, keySize);
+                case "IDEA":
+                    return new IDEA(mode, padding);
+                case "RC4":
+                    return new RC4(keySize);
+                case "RC5":
+                    return new RC5(mode, padding, keySize);
+                case "RC6":
+                    return new RC6(mode, padding, keySize);
+                case "RSA":
+                    return new RSA(mode, keySize);
+                case "SAM":
+                    return new SAM(keySize);
+                case "DH":
+                    return new DH(keySize);
+                case "ELGAMAL":
+                    return new ELGAMAL(keySize);
+                case "PAILLIER":
+                    return new PAILLIER(keySize);
+                default:
+                    throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
+            }
+        }
     }
+
+    public static void main(String[] args) throws Exception {
+        String variable = "DES_CTR"; // Change this to test any algorithm
+        AlgorithmType algoType = AlgorithmType.valueOf(variable); // Convert string to enum
+        CryptographicAlgorithm algorithm = algoType.createAlgorithm();
+
+        String filePath = "db/test_datasets/plaintext_KB50.txt"; // Change this to your file path
+        String plainText = readTextFromFile(filePath);
+
+        System.out.println("Testing " + algoType.name() + ":");
+        evaluationTest(algorithm, plainText);
+    }
+
+    /**
+     * Reads text content from a file.
+     * @param filePath The path to the file to read.
+     * @return The content of the file as a string.
+     * @throws Exception if the file cannot be read.
+     */
+    public static String readTextFromFile(String filePath) throws Exception {
+        try {
+            byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
+            return new String(fileBytes);
+        } catch (Exception e) {
+            throw new Exception("Failed to read file '" + filePath + "': " + e.getMessage());
+        }
+    }
+
 
     /**
      *      Evaluates a cryptographic algorithm's performance and correctness.
@@ -97,9 +324,9 @@ public class Sceptric {
                     String decryptedText = algorithm.decrypt(cipherText);
                     boolean isCorrect = decryptedText.equals(plainText);
                     System.out.println("Correctness: " + (isCorrect ? "Pass" : "Fail"));
-                    System.out.println("Original: " + plainText);
-                    System.out.println("Encrypted: " + cipherText);
-                    System.out.println("Decrypted: " + decryptedText);
+                    //System.out.println("Original: " + plainText);
+                    //System.out.println("Encrypted: " + cipherText);
+                    //System.out.println("Decrypted: " + decryptedText);
                 }
             }
 
@@ -125,40 +352,32 @@ public class Sceptric {
             System.err.println("Evaluation failed for " + algorithm.getAlgorithmName() + ": " + e.getMessage());
         }
     }
-    /**
-     * Tests Diffie-Hellman key exchange to verify shared secret agreement.
-     */
-    public static void testDH() throws Exception {
-        int[] keySizes = {1024, 2048}; // Supported DH key sizes
-        // 4096 is too large so bottleneck causes it to take a lot of time --- meaning that big key size doesn't mean better overall.
-        for (int keySize : keySizes) {
-            try {
-                System.out.println("\nTesting Diffie-Hellman key exchange with " + keySize + " bits:");
 
-                // Generate key pairs for Alice and Bob
-                DH alice = new DH(keySize);
-                DH bob = new DH(keySize);
+    public String eossibleAlgorithm () throws Exception {
+        //      Standard Algorithms Possible to test on:
 
-                // Exchange public keys
-                String alicePublicKeyEncoded = alice.getEncodedPublicKey();
-                String bobPublicKeyEncoded = bob.getEncodedPublicKey();
+        CryptographicAlgorithm Rsa1 = new RSA("PKCS1Padding", 1024);
+        CryptographicAlgorithm Rsa2 = new RSA("PKCS1Padding", 2048);
+        CryptographicAlgorithm Rsa3 = new RSA("PKCS1Padding", 4096);
 
-                PublicKey alicePublicKey = DH.decodePublicKey(alicePublicKeyEncoded);
-                PublicKey bobPublicKey = DH.decodePublicKey(bobPublicKeyEncoded);
+        CryptographicAlgorithm Rsa4 = new RSA("NoPadding", 1024);
+        CryptographicAlgorithm Rsa5 = new RSA("NoPadding", 2048);
+        CryptographicAlgorithm Rsa6 = new RSA("NoPadding", 4096);
 
-                // Compute shared secrets
-                String aliceSharedSecret = alice.generateSharedSecret(bobPublicKey);
-                String bobSharedSecret = bob.generateSharedSecret(alicePublicKey);
+        CryptographicAlgorithm Sam1 = new SAM(1024);
+        CryptographicAlgorithm Sam2 = new SAM(2048);
+        CryptographicAlgorithm Sam3 = new SAM(3072);
 
-                System.out.println("Alice's Shared Secret: " + aliceSharedSecret);
-                System.out.println("Bob's Shared Secret: " + bobSharedSecret);
+        CryptographicAlgorithm Dh1 = new DH(1024);
+        CryptographicAlgorithm Dh2 = new DH(2048);
+        CryptographicAlgorithm Dh3 = new DH(4096);
 
-                // Verify both parties derive the same shared secret
-                boolean isSuccess = aliceSharedSecret.equals(bobSharedSecret);
-                System.out.println("Shared Secret Match: " + (isSuccess ? "Success" : "Failure"));
-            } catch (Exception e) {
-                System.err.println("Diffie-Hellman test failed for " + keySize + " bits: " + e.getMessage());
-            }
-        }
+        CryptographicAlgorithm elgamal = new ELGAMAL(1024);
+        CryptographicAlgorithm elgamal2 = new ELGAMAL(2048);
+        CryptographicAlgorithm elgamal3 = new ELGAMAL(4096);
+
+        CryptographicAlgorithm pal1 = new PAILLIER(1024);
+        CryptographicAlgorithm pal2 = new PAILLIER(2048);
+        return null;
     }
 }

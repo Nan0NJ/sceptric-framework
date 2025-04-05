@@ -34,3 +34,7 @@ replay_pid*
 .mvn/
 pom.xml.tag
 pom.xml.releaseBackup
+
+
+# Ignore the biggest file
+db/test_datasets/plaintext_MB128.txt

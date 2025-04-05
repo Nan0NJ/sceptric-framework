@@ -11,6 +11,12 @@ import oshi.hardware.HardwareAbstractionLayer;
 import oshi.software.os.OperatingSystem;
 import oshi.software.os.OSProcess;
 
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -233,11 +239,11 @@ public class Sceptric {
     }
 
     public static void main(String[] args) throws Exception {
-        String variable = "DES_CTR"; // Change this to test any algorithm
+        String variable = "AES_ECB_128"; // Change this to test any algorithm
         AlgorithmType algoType = AlgorithmType.valueOf(variable); // Convert string to enum
         CryptographicAlgorithm algorithm = algoType.createAlgorithm();
 
-        String filePath = "db/test_datasets/plaintext_KB50.txt"; // Change this to your file path
+        String filePath = "db/test_datasets/plaintext_MB1.txt"; // Change this to your file path
         String plainText = readTextFromFile(filePath);
 
         System.out.println("Testing " + algoType.name() + ":");
@@ -275,6 +281,9 @@ public class Sceptric {
             int pid = os.getProcessId();
             OSProcess process = os.getProcess(pid);
 
+            ///     Initialize Path to HWiNFO's CSV log for gathering CPU power.
+            String csvPath = "C:\\power_log.csv";// Adjust this to your log file path
+
             ///     Retrieve power information
             List<PowerSource> powerSources = hardware.getPowerSources();
             for (PowerSource ps : powerSources) {
@@ -297,7 +306,12 @@ public class Sceptric {
             long totalExecutionTime = 0;
             double totalCpuLoad = 0;
             long totalMemoryUsed = 0;
-            double totalPowerUsed = 0;
+            double totalCpuPowerWatts = 0.0;
+            int validPowerReadings = 0;
+
+            ///     File to save results
+            FileWriter writer = new FileWriter("crypto_power_usage.csv");
+            writer.write("Iteration,ExecutionTime(ns),CpuLoad(%),MemoryUsed(bytes),CpuPower(W)\n");
 
             ///     Measure over multiple iterations
             for (int i = 0; i < iterations; i++) {
@@ -310,42 +324,53 @@ public class Sceptric {
                 long endTime = System.nanoTime();
                 process.updateAttributes();
 
+                ///     Get CPU power from HWiNFO's CSV
+                double cpuPowerWatts = getLatestCpuPowerFromCsv(csvPath);
+                if (cpuPowerWatts != -1) {
+                    totalCpuPowerWatts += cpuPowerWatts;
+                    validPowerReadings++;
+                }
+
                 totalExecutionTime += (endTime - startTime);
                 totalCpuLoad += processor.getSystemCpuLoadBetweenTicks(ticksBefore);
                 totalMemoryUsed += (process.getResidentSetSize() - memoryBefore);
 
-                ///     Estimate power usage
-                for (PowerSource ps : powerSources) {
-                    totalPowerUsed += Math.abs(ps.getPowerUsageRate());
-                }
+                // Save to CSV
+                writer.write(String.format("%d,%d,%.2f,%d,%.2f\n",
+                        i, (endTime - startTime), processor.getSystemCpuLoadBetweenTicks(ticksBefore) * 100,
+                        (process.getResidentSetSize() - memoryBefore), cpuPowerWatts));
 
                 ///     Verify correctness (only once, after first iteration)
                 if (i == 0) {
                     String decryptedText = algorithm.decrypt(cipherText);
                     boolean isCorrect = decryptedText.equals(plainText);
                     System.out.println("Correctness: " + (isCorrect ? "Pass" : "Fail"));
-                    //System.out.println("Original: " + plainText);
-                    //System.out.println("Encrypted: " + cipherText);
-                    //System.out.println("Decrypted: " + decryptedText);
                 }
+
             }
+
+            writer.close();
 
             ///     Calculate averages
             long avgExecutionTime = totalExecutionTime / iterations;
             double avgCpuLoad = totalCpuLoad / iterations;
             long avgMemoryUsed = totalMemoryUsed / iterations;
-            double avgPowerUsage = totalPowerUsed / iterations;
+
+            double avgCpuPowerWatts = (validPowerReadings > 0) ? totalCpuPowerWatts / validPowerReadings : 0;
+
             double executionTimeSeconds = avgExecutionTime / 1_000_000_000.0;
-            double energyJoules = avgPowerUsage * executionTimeSeconds;
+
+            double energyJoulesNEW = avgCpuPowerWatts * executionTimeSeconds;
 
 
             ///     Output results
             System.out.println("Algorithm: " + algorithm.getAlgorithmName());
             System.out.println("Avg Execution Time: " + avgExecutionTime + " ns");
-            System.out.println("Avg CPU Load: " + String.format("%.2f%%", avgCpuLoad * 100));
-            System.out.println("Avg Memory Used: " + avgMemoryUsed + " bytes");
-            System.out.println("Avg Power Usage: " + avgPowerUsage + " mW");
-            System.out.println("Estimated Energy (Joules): " + String.format("%.4f J", energyJoules));
+            System.out.println("Avg CPU Load (OSHI):" + String.format("%.2f%%", avgCpuLoad * 100));
+            System.out.println("Avg Memory Used (OSHI): " + avgMemoryUsed + " bytes");
+
+            System.out.println("Avg CPU Power (HWiNFO): " + String.format("%.2f W", avgCpuPowerWatts));
+            System.out.println("Estimated Energy: " + String.format("%.4f J", energyJoulesNEW));
             System.out.println("----------------------------------------------------");
 
         } catch (Exception e) {
@@ -353,31 +378,64 @@ public class Sceptric {
         }
     }
 
-    public String eossibleAlgorithm () throws Exception {
-        //      Standard Algorithms Possible to test on:
+    /**
+     * Reads the latest CPU Package Power from HWiNFO's CSV log.
+     * @param csvPath Path to HWiNFO's power_log.csv file.
+     * @return CPU power in watts, or -1 if not found.
+     */
+    public static double getLatestCpuPowerFromCsv(String csvPath) {
+        try (BufferedReader br = new BufferedReader(new FileReader(csvPath))) {
+            String header = br.readLine();
+            if (header == null) {
+                System.err.println("CSV file is empty or not found");
+                return -1;
+            }
 
-        CryptographicAlgorithm Rsa1 = new RSA("PKCS1Padding", 1024);
-        CryptographicAlgorithm Rsa2 = new RSA("PKCS1Padding", 2048);
-        CryptographicAlgorithm Rsa3 = new RSA("PKCS1Padding", 4096);
+            String[] headers = header.split(",");
+            int powerColumnIndex = -1;
 
-        CryptographicAlgorithm Rsa4 = new RSA("NoPadding", 1024);
-        CryptographicAlgorithm Rsa5 = new RSA("NoPadding", 2048);
-        CryptographicAlgorithm Rsa6 = new RSA("NoPadding", 4096);
+            for (int i = 0; i < headers.length; i++) {
+                String headerTrimmed = headers[i].trim();
+                ///      Use exact or safe match — not CPU model strings, for faster use
+                if (headerTrimmed.equalsIgnoreCase("CPU Package Power")
+                        || headerTrimmed.equalsIgnoreCase("CPU (Total) Package Power")
+                        || headerTrimmed.toLowerCase().contains("package power")) {
+                    powerColumnIndex = i;
+                    break;
+                }
+            }
 
-        CryptographicAlgorithm Sam1 = new SAM(1024);
-        CryptographicAlgorithm Sam2 = new SAM(2048);
-        CryptographicAlgorithm Sam3 = new SAM(3072);
+            if (powerColumnIndex == -1) {
+                System.err.println("CPU Package Power column not found. Headers: " + Arrays.toString(headers));
+                return -1;
+            }
 
-        CryptographicAlgorithm Dh1 = new DH(1024);
-        CryptographicAlgorithm Dh2 = new DH(2048);
-        CryptographicAlgorithm Dh3 = new DH(4096);
+            String line, lastLine = null;
+            while ((line = br.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    lastLine = line;
+                }
+            }
 
-        CryptographicAlgorithm elgamal = new ELGAMAL(1024);
-        CryptographicAlgorithm elgamal2 = new ELGAMAL(2048);
-        CryptographicAlgorithm elgamal3 = new ELGAMAL(4096);
+            if (lastLine == null) {
+                System.err.println("No data rows found in CSV");
+                return -1;
+            }
 
-        CryptographicAlgorithm pal1 = new PAILLIER(1024);
-        CryptographicAlgorithm pal2 = new PAILLIER(2048);
-        return null;
+            String[] values = lastLine.split(",");
+            if (powerColumnIndex >= values.length) {
+                System.err.println("Power column index out of bounds in last row");
+                return -1;
+            }
+
+            String powerStr = values[powerColumnIndex].trim().replaceAll("[^0-9.]", "");
+            return Double.parseDouble(powerStr);
+
+        } catch (IOException e) {
+            System.err.println("Error reading CSV: " + e.getMessage());
+        } catch (NumberFormatException e) {
+            System.err.println("Power value parsing failed: " + e.getMessage());
+        }
+        return -1;
     }
 }

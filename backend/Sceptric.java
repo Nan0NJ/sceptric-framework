@@ -16,6 +16,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.PreparedStatement;
 import java.util.Arrays;
 import java.util.List;
 import java.nio.file.Files;
@@ -310,7 +311,8 @@ public class Sceptric {
             int validPowerReadings = 0;
 
             ///     File to save results
-            FileWriter writer = new FileWriter("crypto_power_usage.csv");
+            String csvFile = "crypto_power_usage.csv";
+            FileWriter writer = new FileWriter(csvFile);
             writer.write("Iteration,ExecutionTime(ns),CpuLoad(%),MemoryUsed(bytes),CpuPower(W)\n");
 
             ///     Measure over multiple iterations
@@ -331,20 +333,21 @@ public class Sceptric {
                     validPowerReadings++;
                 }
 
-                totalExecutionTime += (endTime - startTime);
-                totalCpuLoad += processor.getSystemCpuLoadBetweenTicks(ticksBefore);
-                totalMemoryUsed += (process.getResidentSetSize() - memoryBefore);
+                long execTime = endTime - startTime;
+                double cpuLoad = processor.getSystemCpuLoadBetweenTicks(ticksBefore) * 100;
+                long memoryUsed = process.getResidentSetSize() - memoryBefore;
 
-                // Save to CSV
+                totalExecutionTime += execTime;
+                totalCpuLoad += cpuLoad;
+                totalMemoryUsed += memoryUsed;
+
                 writer.write(String.format("%d,%d,%.2f,%d,%.2f\n",
-                        i, (endTime - startTime), processor.getSystemCpuLoadBetweenTicks(ticksBefore) * 100,
-                        (process.getResidentSetSize() - memoryBefore), cpuPowerWatts));
+                        i, execTime, cpuLoad, memoryUsed, cpuPowerWatts));
 
                 ///     Verify correctness (only once, after first iteration)
                 if (i == 0) {
                     String decryptedText = algorithm.decrypt(cipherText);
-                    boolean isCorrect = decryptedText.equals(plainText);
-                    System.out.println("Correctness: " + (isCorrect ? "Pass" : "Fail"));
+                    System.out.println("Correctness: " + (decryptedText.equals(plainText) ? "Pass" : "Fail"));
                 }
 
             }
@@ -355,28 +358,119 @@ public class Sceptric {
             long avgExecutionTime = totalExecutionTime / iterations;
             double avgCpuLoad = totalCpuLoad / iterations;
             long avgMemoryUsed = totalMemoryUsed / iterations;
-
             double avgCpuPowerWatts = (validPowerReadings > 0) ? totalCpuPowerWatts / validPowerReadings : 0;
-
             double executionTimeSeconds = avgExecutionTime / 1_000_000_000.0;
-
-            double energyJoulesNEW = avgCpuPowerWatts * executionTimeSeconds;
+            double avgEnergyConsumption = avgCpuPowerWatts * executionTimeSeconds;
 
 
             ///     Output results
             System.out.println("Algorithm: " + algorithm.getAlgorithmName());
             System.out.println("Avg Execution Time: " + avgExecutionTime + " ns");
-            System.out.println("Avg CPU Load (OSHI):" + String.format("%.2f%%", avgCpuLoad * 100));
+            System.out.println("Avg CPU Load (OSHI): " + String.format("%.2f%%", avgCpuLoad));
             System.out.println("Avg Memory Used (OSHI): " + avgMemoryUsed + " bytes");
-
             System.out.println("Avg CPU Power (HWiNFO): " + String.format("%.2f W", avgCpuPowerWatts));
-            System.out.println("Estimated Energy: " + String.format("%.4f J", energyJoulesNEW));
+            System.out.println("Estimated Energy: " + String.format("%.4f J", avgEnergyConsumption));
             System.out.println("----------------------------------------------------");
+
+            ///     Import into SQLite
+            try {
+                DBConn dbConn = new DBConn();
+                dbConn.createTables();  // Ensure tables exist
+
+                ///     Insert raw data into all iterations db
+                String insertRawSQL = "INSERT INTO cryptographic_iterations (algorithm, iteration, execution_time, cpu_load, memory_used, cpu_power, energy_consumption) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                PreparedStatement rawStmt = dbConn.getConnection().prepareStatement(insertRawSQL);
+
+                try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+                    String line;
+                    br.readLine();  // Skip csv header (as this is just validation for me to see what is what.
+                    int iter = 0;
+                    while ((line = br.readLine()) != null) {
+                        String[] data = line.split(",");
+                        rawStmt.setString(1, algorithm.getAlgorithmName());
+                        rawStmt.setInt(2, iter++);
+                        rawStmt.setLong(3, Long.parseLong(data[1]));
+                        rawStmt.setDouble(4, Double.parseDouble(data[2]));
+                        rawStmt.setLong(5, Long.parseLong(data[3]));
+                        rawStmt.setDouble(6, Double.parseDouble(data[4]));
+                        double energy = Double.parseDouble(data[4]) * (Long.parseLong(data[1]) / 1_000_000_000.0);
+                        rawStmt.setDouble(7, energy);
+                        rawStmt.executeUpdate();
+                    }
+                }
+                double[] minMax = computeMinMaxFromCSV(csvFile);
+
+                ///     Summary Data db
+                String insertSummarySQL = "INSERT OR REPLACE INTO algorithm_performance_summary (algorithm, avg_execution_time, min_execution_time, max_execution_time, avg_cpu_load, min_cpu_load, max_cpu_load, avg_memory_used, min_memory_used, max_memory_used, avg_cpu_power, min_cpu_power, max_cpu_power, avg_energy_consumption, min_energy_consumption, max_energy_consumption, total_iterations, test_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATETIME('now'))";
+                PreparedStatement summaryStmt = dbConn.getConnection().prepareStatement(insertSummarySQL);
+
+                summaryStmt.setString(1, algorithm.getAlgorithmName());
+                summaryStmt.setLong(2, avgExecutionTime);
+                summaryStmt.setLong(3, (long) minMax[0]);
+                summaryStmt.setLong(4, (long) minMax[1]);
+                summaryStmt.setDouble(5, avgCpuLoad);
+                summaryStmt.setDouble(6, minMax[2]);
+                summaryStmt.setDouble(7, minMax[3]);
+                summaryStmt.setLong(8, avgMemoryUsed);
+                summaryStmt.setLong(9, (long) minMax[4]);
+                summaryStmt.setLong(10, (long) minMax[5]);
+                summaryStmt.setDouble(11, avgCpuPowerWatts);
+                summaryStmt.setDouble(12, minMax[6]);
+                summaryStmt.setDouble(13, minMax[7]);
+                summaryStmt.setDouble(14, avgEnergyConsumption);
+                summaryStmt.setDouble(15, minMax[8]);
+                summaryStmt.setDouble(16, minMax[9]);
+                summaryStmt.setInt(17, iterations);
+
+                summaryStmt.executeUpdate();
+                dbConn.close();
+                System.out.println("Data imported into SQLite successfully.");
+
+            } catch (Exception e) {
+                System.err.println("Failed to import data into SQLite: " + e.getMessage());
+            }
 
         } catch (Exception e) {
             System.err.println("Evaluation failed for " + algorithm.getAlgorithmName() + ": " + e.getMessage());
         }
     }
+
+    public static double[] computeMinMaxFromCSV(String csvPath) {
+        double[] results = new double[10]; // [minExec, maxExec, minLoad, maxLoad, minMem, maxMem, minPower, maxPower, minEnergy, maxEnergy]
+        Arrays.fill(results, Double.MAX_VALUE);
+        for (int i = 1; i < results.length; i += 2) results[i] = -Double.MAX_VALUE;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(csvPath))) {
+            br.readLine(); // skip header
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+                if (data.length < 5) continue;
+
+                long execTime = Long.parseLong(data[1]);
+                double cpuLoad = Double.parseDouble(data[2]);
+                long memoryUsed = Long.parseLong(data[3]);
+                double cpuPower = Double.parseDouble(data[4]);
+                double energy = cpuPower * (execTime / 1_000_000_000.0);
+
+                results[0] = Math.min(results[0], execTime);
+                results[1] = Math.max(results[1], execTime);
+                results[2] = Math.min(results[2], cpuLoad);
+                results[3] = Math.max(results[3], cpuLoad);
+                results[4] = Math.min(results[4], memoryUsed);
+                results[5] = Math.max(results[5], memoryUsed);
+                results[6] = Math.min(results[6], cpuPower);
+                results[7] = Math.max(results[7], cpuPower);
+                results[8] = Math.min(results[8], energy);
+                results[9] = Math.max(results[9], energy);
+            }
+        } catch (Exception e) {
+            System.err.println("Error reading CSV for min/max: " + e.getMessage());
+        }
+
+        return results;
+    }
+
 
     /**
      * Reads the latest CPU Package Power from HWiNFO's CSV log.

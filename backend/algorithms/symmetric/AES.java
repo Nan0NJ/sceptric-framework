@@ -91,8 +91,11 @@ public class AES implements CryptographicAlgorithm {
 
         byte[] inputBytes = plainText.getBytes(StandardCharsets.UTF_8);
 
+        byte[] freshIv = new byte[mode.equals("GCM") ? 12 : 16];
+        new SecureRandom().nextBytes(freshIv);
+
         if (mode.equals("GCM")) {
-            cipher.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(128, iv));
+            cipher.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(128, freshIv));
         } else if (!mode.equals("ECB")) { // CBC, CTR, CFB, OFB
             cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(iv));
         } else { // ECB

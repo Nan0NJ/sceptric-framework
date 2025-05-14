@@ -26,7 +26,7 @@ public class Sceptric {
 
     ///     Enum to store all algorithm configurations
     public enum AlgorithmType {
-        // AES Algorithms
+        // AES Algorithms TESTED
         AES_ECB_128("AES", "ECB", "PKCS5Padding", 128),
         AES_ECB_192("AES", "ECB", "PKCS5Padding", 192),
         AES_ECB_256("AES", "ECB", "PKCS5Padding", 256),
@@ -42,11 +42,13 @@ public class Sceptric {
         AES_OFB128_128("AES", "OFB128", "PKCS5Padding", 128),
         AES_OFB128_192("AES", "OFB128", "PKCS5Padding", 192),
         AES_OFB128_256("AES", "OFB128", "PKCS5Padding", 256),
-        AES_GCM_128("AES", "GCM", "PKCS5Padding", 128),
-        AES_GCM_192("AES", "GCM", "PKCS5Padding", 192),
-        AES_GCM_256("AES", "GCM", "PKCS5Padding", 256),
 
-        // DES Algorithms
+        // DIDN't DO ERROR FIND later (NOT IN DB)
+        AES_GCM_128("AES", "GCM", "NoPadding", 128),
+        AES_GCM_192("AES", "GCM", "NoPadding", 192),
+        AES_GCM_256("AES", "GCM", "NoPadding", 256),
+
+        // DES Algorithms TESTED
         DES_ECB("DES", "ECB", "PKCS5Padding", 0),
         DES_CBC("DES", "CBC", "PKCS5Padding", 0),
         DES_CTR("DES", "CTR", "NoPadding", 0),
@@ -55,7 +57,7 @@ public class Sceptric {
         DES_OFB_P("DES", "OFB", "PKCS5Padding", 0),
         DES_OFB_N("DES", "OFB", "NoPadding", 0),
 
-        // DES3 (Triple DES) Algorithms
+        // DES3 (Triple DES) Algorithms TESTED
         TDES_ECB("DES3", "ECB", "PKCS5Padding", 0),
         TDES_CBC("DES3", "CBC", "PKCS5Padding", 0),
         TDES_CTR("DES3", "CTR", "NoPadding", 0),
@@ -64,7 +66,7 @@ public class Sceptric {
         TDES_OFB_P("DES3", "OFB", "PKCS5Padding", 0),
         TDES_OFB_N("DES3", "OFB", "NoPadding", 0),
 
-        // Blowfish Algorithms
+        // Blowfish Algorithms TESTED
         BLOWFISH_ECB_32("BLOWFISH", "ECB", "PKCS5Padding", 32),
         BLOWFISH_ECB_64("BLOWFISH", "ECB", "PKCS5Padding", 64),
         BLOWFISH_ECB_128("BLOWFISH", "ECB", "PKCS5Padding", 128),
@@ -114,7 +116,7 @@ public class Sceptric {
         BLOWFISH_OFB_N_256("BLOWFISH", "OFB", "NoPadding", 256),
         BLOWFISH_OFB_N_448("BLOWFISH", "OFB", "NoPadding", 448),
 
-        // IDEA Algorithms
+        // IDEA Algorithms TESTED
         IDEA_ECB("IDEA", "ECB", "PKCS5Padding", 0),
         IDEA_CBC("IDEA", "CBC", "PKCS5Padding", 0),
         IDEA_CTR("IDEA", "CTR", "NoPadding", 0),
@@ -123,7 +125,7 @@ public class Sceptric {
         IDEA_OFB_P("IDEA", "OFB", "PKCS5Padding", 0),
         IDEA_OFB_N("IDEA", "OFB", "NoPadding", 0),
 
-        // RC4 Algorithms
+        // RC4 Algorithms TESTED
         RC4_40("RC4", "", "", 40),
         RC4_64("RC4", "", "", 64),
         RC4_128("RC4", "", "", 128),
@@ -131,7 +133,7 @@ public class Sceptric {
         RC4_256("RC4", "", "", 256),
         RC4_1024("RC4", "", "", 1024),
 
-        // RC5 Algorithms
+        // RC5 Algorithms TESTED
         RC5_ECB_128("RC5", "ECB", "PKCS5Padding", 128),
         RC5_EBC_192("RC5", "ECB", "PKCS5Padding", 192),
         RC5_ECB_256("RC5", "ECB", "PKCS5Padding", 256),
@@ -148,7 +150,7 @@ public class Sceptric {
         RC5_OFB_N_192("RC5", "OFB", "NoPadding", 192),
         RC5_OFB_N_256("RC5", "OFB", "NoPadding", 256),
 
-        // RC6 Algorithms
+        // RC6 Algorithms TESTED
         RC6_ECB_128("RC6", "ECB", "PKCS5Padding", 128),
         RC6_EBC_192("RC6", "ECB", "PKCS5Padding", 192),
         RC6_ECB_256("RC6", "ECB", "PKCS5Padding", 256),
@@ -165,7 +167,7 @@ public class Sceptric {
         RC6_OFB_N_192("RC6", "OFB", "NoPadding", 192),
         RC6_OFB_N_256("RC6", "OFB", "NoPadding", 256),
 
-        // RSA Algorithms
+        // RSA Algorithms TESTED
         RSA_PKCS1_1024("RSA", "PKCS1Padding", "", 1024),
         RSA_PKCS1_2048("RSA", "PKCS1Padding", "", 2048),
         RSA_PKCS1_4096("RSA", "PKCS1Padding", "", 4096),
@@ -173,22 +175,22 @@ public class Sceptric {
         RSA_NOPAD_2048("RSA", "NoPadding", "", 2048),
         RSA_NOPAD_4096("RSA", "NoPadding", "", 4096),
 
-        // SAM Algorithms
+        // SAM Algorithms TESTED
         SAM_1024("SAM", "", "", 1024),
         SAM_2048("SAM", "", "", 2048),
         SAM_3072("SAM", "", "", 3072),
 
-        // DH Algorithms
+        // DH Algorithms TESTED
         DH_1024("DH", "", "", 1024),
         DH_2048("DH", "", "", 2048),
         DH_4096("DH", "", "", 4096),
 
-        // ElGamal Algorithms
+        // ElGamal Algorithms TESTED
         ELGAMAL_1024("ELGAMAL", "", "", 1024),
         ELGAMAL_2048("ELGAMAL", "", "", 2048),
         ELGAMAL_4096("ELGAMAL", "", "", 4096),
 
-        // Paillier Algorithms (Hybrid)
+        // Paillier Algorithms (Hybrid) TESTED
         PAILLIER_1024("PAILLIER", "", "", 1024),
         PAILLIER_2048("PAILLIER", "", "", 2048),
         PAILLIER_4096("PAILLIER", "", "", 4096);
@@ -240,15 +242,37 @@ public class Sceptric {
     }
 
     public static void main(String[] args) throws Exception {
-        String variable = "AES_ECB_128"; // Change this to test any algorithm
+        // PAZI POSLEM RSA SMENI OD 100 na 300
+        String variable = "BLOWFISH_OFB_N_448"; // Change this to test any algorithm
         AlgorithmType algoType = AlgorithmType.valueOf(variable); // Convert string to enum
         CryptographicAlgorithm algorithm = algoType.createAlgorithm();
 
-        String filePath = "db/test_datasets/plaintext_MB1.txt"; // Change this to your file path
-        String plainText = readTextFromFile(filePath);
+        // List of test dataset file names
+        String[] fileNames = {
+                "plaintext_KB10.txt",
+                "plaintext_KB50.txt",
+                "plaintext_KB100.txt",
+                "plaintext_KB500.txt",
+                "plaintext_MB1.txt",
+                "plaintext_MB2.txt",
+                "plaintext_MB4.txt",
+                "plaintext_MB8.txt",
+                "plaintext_MB16.txt",
+                "plaintext_MB32.txt",
+                "plaintext_MB64.txt",
+                "plaintext_MB128.txt"
+        };
 
-        System.out.println("Testing " + algoType.name() + ":");
-        evaluationTest(algorithm, plainText);
+        for (String fileName : fileNames) {
+            String filePath = "db/test_datasets/" + fileName;
+            String plainText = readTextFromFile(filePath);
+
+            System.out.println("\n===============================");
+            System.out.println("Testing " + variable + " with " + fileName);
+            System.out.println("===============================");
+
+            evaluationTest(variable + "_" + fileName, algorithm, plainText);
+        }
     }
 
     /**
@@ -272,7 +296,7 @@ public class Sceptric {
      *      @param algorithm The algorithm to test, implementing CryptographicAlgorithm.
      *      @param plainText The plaintext to encrypt and evaluate.
      */
-    public static void evaluationTest(CryptographicAlgorithm algorithm, String plainText) {
+    public static void evaluationTest(String algorithmName, CryptographicAlgorithm algorithm, String plainText) {
         try {
             ///     Initialize System Information for - OSHI
             SystemInfo systemInfo = new SystemInfo();
@@ -303,7 +327,7 @@ public class Sceptric {
             }
 
             ///     Number of iterations for measurable load
-            int iterations = 1000;
+            int iterations = 300;
             long totalExecutionTime = 0;
             double totalCpuLoad = 0;
             long totalMemoryUsed = 0;
@@ -335,7 +359,8 @@ public class Sceptric {
 
                 long execTime = endTime - startTime;
                 double cpuLoad = processor.getSystemCpuLoadBetweenTicks(ticksBefore) * 100;
-                long memoryUsed = process.getResidentSetSize() - memoryBefore;
+                long memoryUsed = Math.max(0, process.getResidentSetSize() - memoryBefore);
+
 
                 totalExecutionTime += execTime;
                 totalCpuLoad += cpuLoad;
@@ -387,7 +412,7 @@ public class Sceptric {
                     int iter = 0;
                     while ((line = br.readLine()) != null) {
                         String[] data = line.split(",");
-                        rawStmt.setString(1, algorithm.getAlgorithmName());
+                        rawStmt.setString(1, algorithmName);
                         rawStmt.setInt(2, iter++);
                         rawStmt.setLong(3, Long.parseLong(data[1]));
                         rawStmt.setDouble(4, Double.parseDouble(data[2]));
@@ -404,7 +429,7 @@ public class Sceptric {
                 String insertSummarySQL = "INSERT OR REPLACE INTO algorithm_performance_summary (algorithm, avg_execution_time, min_execution_time, max_execution_time, avg_cpu_load, min_cpu_load, max_cpu_load, avg_memory_used, min_memory_used, max_memory_used, avg_cpu_power, min_cpu_power, max_cpu_power, avg_energy_consumption, min_energy_consumption, max_energy_consumption, total_iterations, test_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATETIME('now'))";
                 PreparedStatement summaryStmt = dbConn.getConnection().prepareStatement(insertSummarySQL);
 
-                summaryStmt.setString(1, algorithm.getAlgorithmName());
+                summaryStmt.setString(1, algorithmName);
                 summaryStmt.setLong(2, avgExecutionTime);
                 summaryStmt.setLong(3, (long) minMax[0]);
                 summaryStmt.setLong(4, (long) minMax[1]);

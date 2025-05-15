@@ -1,0 +1,4 @@
+mode,Execution Time (ms),CPU Load (%),Memory Used (MB),CPU Power (W),Energy Consumption (mJ),Total Points
+3072,2.0,3.0,1.0,3.0,3.0,12.0
+1024,3.0,2.0,2.0,1.0,1.0,9.0
+2048,1.0,1.0,3.0,2.0,2.0,9.0

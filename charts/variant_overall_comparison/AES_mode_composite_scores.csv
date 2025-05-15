@@ -1,0 +1,6 @@
+mode,Execution Time (ms),CPU Load (%),Memory Used (MB),CPU Power (W),Energy Consumption (mJ),Total Points
+CTR,5.0,5.0,3.0,4.0,5.0,22.0
+CBC,3.0,3.0,2.0,3.0,3.0,14.0
+ECB,4.0,4.0,1.0,1.0,4.0,14.0
+CFB128,1.0,2.0,4.0,5.0,1.0,13.0
+OFB128,2.0,1.0,5.0,2.0,2.0,12.0

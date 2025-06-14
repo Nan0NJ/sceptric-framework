@@ -56,7 +56,7 @@ Results are stored in:
 
 ## 📜 License
 
-MIT License. See [LICENSE](LICENSE).
+Apache 2.0 License. See [LICENSE](LICENSE).
 
 ---
 **Made for practical testing and research in cryptographic performance.**
